@@ -4,6 +4,9 @@
  * @module result
  */
 
+import type { Option } from './option.js';
+import { Some, None } from './option.js';
+
 // ============================================================================
 // RESULT TYPE
 // ============================================================================
@@ -337,11 +340,8 @@ export const tryCatch =
   };
 
 // ============================================================================
-// OPTION INTEROP (import kept at the bottom to avoid circular dependency)
+// OPTION INTEROP
 // ============================================================================
-
-import type { Option } from './option.js';
-import { Some, None } from './option.js';
 
 /**
  * Transform both branches of a Result simultaneously.
