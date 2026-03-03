@@ -79,10 +79,16 @@ if [[ -n "$MILESTONE" ]]; then
   ARGS+=(--milestone "$MILESTONE")
 fi
 
-gh pr create "${ARGS[@]}"
+PR_URL=$(gh pr create "${ARGS[@]}")
+echo "$PR_URL"
+
+# Enable auto-merge: PR will merge automatically once all CI checks pass
+echo ""
+echo "==> Enabling auto-merge (squash)..."
+gh pr merge --auto --squash "$PR_URL" && echo "  Auto-merge enabled" || echo "  Could not enable auto-merge (non-fatal)"
 
 # Add PR to mago-office project board via GraphQL
-PR_NODE_ID=$(gh pr view --json nodeId -q .nodeId 2>/dev/null || echo "")
+PR_NODE_ID=$(gh pr view --json nodeId -q .nodeId "$PR_URL" 2>/dev/null || echo "")
 if [[ -n "$PR_NODE_ID" ]]; then
   echo ""
   echo "==> Adding PR to mago-office project board..."
