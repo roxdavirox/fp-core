@@ -1,7 +1,11 @@
 /**
- * Async array transformation helpers: mapAsync, mapParallel, mapConcurrent, filterAsync, reduceAsync.
+ * Async array transformation helpers: mapAsync, mapParallel, mapConcurrent, filterAsync, reduceAsync,
+ * mapConcurrentResult, mapAsyncResult, reduceAsyncResult.
  * @internal
  */
+
+import type { Result } from '../result.js';
+import { isOk } from '../result.js';
 
 // ============================================================================
 // ASYNC ARRAY TRANSFORMATIONS
@@ -107,4 +111,91 @@ export const reduceAsync =
       result = await fn(result, item);
     }
     return result;
+  };
+
+// ============================================================================
+// RESULT-AWARE ASYNC OPERATIONS
+// ============================================================================
+
+/**
+ * Maps over an array with a concurrency limit, collecting all `Result` values.
+ * Runs at most `concurrency` items at a time.
+ *
+ * Returns `Ok(values)` when every item succeeds, or `Err(errors)` with **all**
+ * failures accumulated (does not short-circuit on first error).
+ *
+ * @example
+ * const results = await mapConcurrentResult(3, async (id) =>
+ *   fetchUser(id)
+ * )(userIds);
+ * // Ok([user1, user2, …]) or Err([err1, err2, …])
+ */
+export const mapConcurrentResult =
+  <T, B, E>(concurrency: number, fn: (item: T) => Promise<Result<B, E>>) =>
+  async (arr: T[]): Promise<Result<B[], E[]>> => {
+    const settled: Result<B, E>[] = new Array(arr.length);
+    const executing = new Set<Promise<void>>();
+
+    for (const [index, item] of arr.entries()) {
+      const p: Promise<void> = fn(item).then(r => {
+        settled[index] = r;
+        executing.delete(p);
+      });
+      executing.add(p);
+      if (executing.size >= concurrency) await Promise.race(executing);
+    }
+
+    await Promise.all(executing);
+
+    const values: B[] = [];
+    const errors: E[] = [];
+    for (const r of settled) {
+      if (isOk(r)) values.push(r.value);
+      else errors.push(r.error);
+    }
+    return errors.length === 0
+      ? { ok: true, value: values }
+      : { ok: false, error: errors };
+  };
+
+/**
+ * Sequential variant of {@link mapConcurrentResult} (concurrency = 1).
+ *
+ * Maps over an array one element at a time, collecting all `Result` values.
+ * Returns `Ok(values)` if all succeed, `Err(errors)` with all failures.
+ *
+ * @example
+ * const results = await mapAsyncResult(async (id) =>
+ *   fetchUser(id)
+ * )(userIds);
+ */
+export const mapAsyncResult =
+  <T, B, E>(fn: (item: T) => Promise<Result<B, E>>) =>
+  (arr: T[]): Promise<Result<B[], E[]>> =>
+    mapConcurrentResult(1, fn)(arr);
+
+/**
+ * Reduces an array with an async `Result`-returning reducer, stopping on the
+ * first error (curried, data-last).
+ *
+ * Returns `Ok(finalAcc)` when every step succeeds, or `Err(firstError)` as
+ * soon as a step fails.
+ *
+ * @example
+ * const result = await reduceAsyncResult(
+ *   async (acc, item) => processItem(acc, item),
+ *   initialState
+ * )(items);
+ * // Ok(finalState) or Err(firstFailure)
+ */
+export const reduceAsyncResult =
+  <T, B, E>(fn: (acc: B, item: T) => Promise<Result<B, E>>, initial: B) =>
+  async (arr: T[]): Promise<Result<B, E>> => {
+    let acc = initial;
+    for (const item of arr) {
+      const r = await fn(acc, item);
+      if (!isOk(r)) return r;
+      acc = r.value;
+    }
+    return { ok: true, value: acc };
   };
