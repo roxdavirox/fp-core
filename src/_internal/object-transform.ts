@@ -1,5 +1,5 @@
 /**
- * Object transformation helpers: pick, omit, merge, deepMerge, mapValues, mapKeys, filterKeys, filterValues.
+ * Object transformation helpers: pick, omit, merge, deepMerge, defaults, mapValues, mapKeys, filterKeys, filterValues.
  * @internal
  */
 
@@ -95,6 +95,20 @@ export const deepMerge =
 
     return result as T & U;
   };
+
+/**
+ * Fills missing keys in an object using default values (curried, data-last).
+ * Existing keys in the object are preserved; only absent keys are taken from
+ * `defaultValues`.
+ *
+ * @example
+ * defaults({ timeout: 5000, retries: 3 })({ timeout: 1000 });
+ * // { timeout: 1000, retries: 3 }
+ */
+export const defaults =
+  <T extends object>(defaultValues: Partial<T>) =>
+  (obj: Partial<T>): T =>
+    ({ ...defaultValues, ...obj }) as T;
 
 /**
  * Transforms every value in an object, preserving keys (curried, data-last).
