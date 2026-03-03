@@ -260,6 +260,7 @@ describe('deepEquals', () => {
   it('equal primitives', () => expect(deepEquals(1)(1)).toBe(true));
   it('unequal primitives', () => expect(deepEquals(1)(2)).toBe(false));
   it('null equals null', () => expect(deepEquals(null)(null)).toBe(true));
+  it('undefined equals undefined', () => expect(deepEquals(undefined)(undefined)).toBe(true));
   it('nested plain objects', () => expect(deepEquals({ x: { y: 1 } })({ x: { y: 1 } })).toBe(true));
   it('nested objects — mismatch', () => expect(deepEquals({ x: { y: 1 } })({ x: { y: 2 } })).toBe(false));
   it('arrays', () => expect(deepEquals([1, 2, 3])([1, 2, 3])).toBe(true));

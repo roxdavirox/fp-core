@@ -227,19 +227,20 @@ export const clone = <T>(obj: T): T => {
 // ============================================================================
 
 /** Internal recursive helper — carries a seen-map for cycle detection. */
-function deepEq(a: unknown, b: unknown, seen: Map<unknown, unknown>): boolean {
+const deepEq = (a: unknown, b: unknown, seen: Map<unknown, unknown>): boolean => {
   if (Object.is(a, b)) return true;
   if (a === null || b === null) return false;
   if (typeof a !== 'object' || typeof b !== 'object') return false;
   if (Object.getPrototypeOf(a) !== Object.getPrototypeOf(b)) return false;
 
-  if (seen.has(a)) return seen.get(a) === b;
-  seen.set(a, b);
-
+  // Leaf types that don't recurse — check before registering in seen-map
   if (a instanceof Date) return a.getTime() === (b as Date).getTime();
   if (a instanceof RegExp) {
     return a.source === (b as RegExp).source && a.flags === (b as RegExp).flags;
   }
+
+  if (seen.has(a)) return seen.get(a) === b;
+  seen.set(a, b);
 
   if (Array.isArray(a)) {
     if (a.length !== (b as unknown[]).length) return false;
@@ -287,6 +288,12 @@ function deepEq(a: unknown, b: unknown, seen: Map<unknown, unknown>): boolean {
  * and circular references. Two circular structures are equal if they mirror
  * each other structurally.
  *
+ * @remarks
+ * `Set` membership is compared by reference for object values. Two sets
+ * containing structurally identical (but distinct) objects are **not** equal:
+ * `deepEquals(new Set([{a:1}]))(new Set([{a:1}]))` returns `false`.
+ * For primitive-only sets this is not a concern.
+ *
  * @example
  * deepEquals({ x: { y: 1 } })({ x: { y: 1 } }); // true
  * deepEquals([1, [2, 3]])([1, [2, 3]]);           // true
@@ -304,7 +311,7 @@ export const deepEquals =
     deepEq(a, b, new Map());
 
 /** Internal recursive helper — carries a seen-map for cycle detection. */
-function deepCopy(value: unknown, seen: Map<unknown, unknown>): unknown {
+const deepCopy = (value: unknown, seen: Map<unknown, unknown>): unknown => {
   if (value === null || typeof value !== 'object') return value;
   if (seen.has(value)) return seen.get(value);
 
