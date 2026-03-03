@@ -273,6 +273,61 @@ export const combineAll = <T, E>(results: Array<Result<T, E>>): Result<T[], E> =
 };
 
 /**
+ * Apply a wrapped function to a wrapped value (applicative `<*>`).
+ * If either argument is `Err`, the first `Err` is returned.
+ *
+ * @example
+ * const double = (n: number) => n * 2;
+ * ap(Ok(double))(Ok(5));    // Ok(10)
+ * ap(Err('no fn'))(Ok(5));  // Err('no fn')
+ * ap(Ok(double))(Err('e')); // Err('e')
+ *
+ * // Combine independent results using curried functions:
+ * const add = (a: number) => (b: number) => a + b;
+ * ap(mapResult(add)(Ok(3)))(Ok(4)); // Ok(7)
+ */
+export const ap =
+  <T, U, E>(resultFn: Result<(a: T) => U, E>) =>
+  (result: Result<T, E>): Result<U, E> => {
+    if (isErr(resultFn)) return resultFn;
+    if (isErr(result)) return result;
+    return Ok(resultFn.value(result.value));
+  };
+
+/**
+ * Lift a 2-argument function to operate on two `Result` values.
+ * Returns `Ok(fn(a, b))` if both are `Ok`, otherwise returns the first `Err`.
+ *
+ * Alias for {@link combineTwo}.
+ *
+ * @example
+ * const add = (a: number, b: number) => a + b;
+ * liftA2(add)(Ok(3), Ok(4));    // Ok(7)
+ * liftA2(add)(Err('x'), Ok(4)); // Err('x')
+ * liftA2(add)(Ok(3), Err('y')); // Err('y')
+ */
+export const liftA2 = combineTwo;
+
+/**
+ * Lift a 3-argument function to operate on three `Result` values.
+ * Returns `Ok(fn(a, b, c))` if all are `Ok`, otherwise returns the first `Err`.
+ *
+ * @example
+ * const sum3 = (a: number, b: number, c: number) => a + b + c;
+ * liftA3(sum3)(Ok(1), Ok(2), Ok(3));    // Ok(6)
+ * liftA3(sum3)(Err('x'), Ok(2), Ok(3)); // Err('x')
+ * liftA3(sum3)(Ok(1), Err('y'), Ok(3)); // Err('y')
+ */
+export const liftA3 =
+  <A, B, C, D, E>(fn: (a: A, b: B, c: C) => D) =>
+  (ra: Result<A, E>, rb: Result<B, E>, rc: Result<C, E>): Result<D, E> => {
+    if (isErr(ra)) return ra;
+    if (isErr(rb)) return rb;
+    if (isErr(rc)) return rc;
+    return Ok(fn(ra.value, rb.value, rc.value));
+  };
+
+/**
  * Collects all errors from an array of Results
  *
  * @example

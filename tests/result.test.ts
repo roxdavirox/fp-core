@@ -13,6 +13,7 @@ import {
   mapResultAsync, flatMapAsync,
   tapResult, tapError, orElse, fromNullableResult,
   bimap, mapLeft, swap, toOption,
+  ap, liftA2, liftA3,
   type Result,
 } from '../src/result.js';
 import { Some, None } from '../src/option.js';
@@ -334,4 +335,90 @@ describe('swap', () => {
 describe('toOption', () => {
   it('converts Ok to Some', () => expect(toOption(Ok(42))).toEqual(Some(42)));
   it('converts Err to None', () => expect(toOption(Err('e'))).toEqual(None));
+});
+
+describe('ap', () => {
+  const double = (n: number) => n * 2;
+
+  it('applies wrapped function to wrapped value', () => {
+    expect(ap(Ok(double))(Ok(5))).toEqual(Ok(10));
+  });
+
+  it('returns Err when the function is Err', () => {
+    expect(ap(Err<typeof double, string>('no fn'))(Ok(5))).toEqual(Err('no fn'));
+  });
+
+  it('returns Err when the argument is Err', () => {
+    expect(ap(Ok(double))(Err<number, string>('bad val'))).toEqual(Err('bad val'));
+  });
+
+  it('returns the function Err when both are Err (first wins)', () => {
+    expect(ap(Err<typeof double, string>('fn-err'))(Err<number, string>('val-err'))).toEqual(Err('fn-err'));
+  });
+
+  it('composes with mapResult for curried functions', () => {
+    const add = (a: number) => (b: number) => a + b;
+    const addToThree = mapResult(add)(Ok(3));
+    expect(ap(addToThree)(Ok(4))).toEqual(Ok(7));
+  });
+});
+
+describe('liftA2', () => {
+  const add = (a: number, b: number) => a + b;
+
+  it('applies fn when both Results are Ok', () => {
+    expect(liftA2(add)(Ok(3), Ok(4))).toEqual(Ok(7));
+  });
+
+  it('returns the first Err when ra is Err', () => {
+    expect(liftA2(add)(Err<number, string>('x'), Ok(4))).toEqual(Err('x'));
+  });
+
+  it('returns the second Err when only rb is Err', () => {
+    expect(liftA2(add)(Ok(3), Err<number, string>('y'))).toEqual(Err('y'));
+  });
+
+  it('returns the first Err when both are Err', () => {
+    expect(liftA2(add)(Err<number, string>('first'), Err<number, string>('second'))).toEqual(Err('first'));
+  });
+
+  it('works with a real-world combine use case', () => {
+    type User = { name: string; age: number };
+    const makeUser = (name: string, age: number): User => ({ name, age });
+    const parseName = (s: string): Result<string, string> =>
+      s.length > 0 ? Ok(s) : Err('name required');
+    const parseAge = (n: number): Result<number, string> =>
+      n >= 0 ? Ok(n) : Err('age must be non-negative');
+
+    expect(liftA2(makeUser)(parseName('Alice'), parseAge(30))).toEqual(Ok({ name: 'Alice', age: 30 }));
+    expect(liftA2(makeUser)(parseName(''), parseAge(30))).toEqual(Err('name required'));
+  });
+});
+
+describe('liftA3', () => {
+  const sum3 = (a: number, b: number, c: number) => a + b + c;
+
+  it('applies fn when all three Results are Ok', () => {
+    expect(liftA3(sum3)(Ok(1), Ok(2), Ok(3))).toEqual(Ok(6));
+  });
+
+  it('returns the first Err (ra)', () => {
+    expect(liftA3(sum3)(Err<number, string>('a'), Ok(2), Ok(3))).toEqual(Err('a'));
+  });
+
+  it('returns the second Err (rb) when ra is Ok', () => {
+    expect(liftA3(sum3)(Ok(1), Err<number, string>('b'), Ok(3))).toEqual(Err('b'));
+  });
+
+  it('returns the third Err (rc) when ra and rb are Ok', () => {
+    expect(liftA3(sum3)(Ok(1), Ok(2), Err<number, string>('c'))).toEqual(Err('c'));
+  });
+
+  it('returns the first Err when all three fail', () => {
+    expect(liftA3(sum3)(
+      Err<number, string>('first'),
+      Err<number, string>('second'),
+      Err<number, string>('third'),
+    )).toEqual(Err('first'));
+  });
 });
