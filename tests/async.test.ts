@@ -10,7 +10,7 @@ import {
   memoizeAsync,
   sequence, parallel,
 } from '../src/async.js';
-import { Ok, Err, isOk, isErr } from '../src/result.js';
+import { Ok, Err, isOk, isErr, type Result } from '../src/result.js';
 
 describe('pipeAsync', () => {
   it('pipes async functions left-to-right', async () => {
@@ -308,6 +308,22 @@ describe('mapConcurrentResult', () => {
     const result = await mapConcurrentResult(3, fn)([0, 1, 2]);
     expect(isOk(result)).toBe(true);
     if (isOk(result)) expect(result.value).toEqual([0, 1, 2]);
+  });
+
+  it('throws RangeError for concurrency < 1', async () => {
+    const fn = async (n: number) => Ok<number, string>(n);
+    await expect(mapConcurrentResult(0, fn)([1])).rejects.toThrow(RangeError);
+    await expect(mapConcurrentResult(-1, fn)([1])).rejects.toThrow(RangeError);
+  });
+
+  it('wraps fn rejections as Err entries', async () => {
+    const fn = async (n: number): Promise<Result<number, unknown>> => {
+      if (n === 2) throw new Error('boom');
+      return Ok(n);
+    };
+    const result = await mapConcurrentResult(2, fn)([1, 2, 3]);
+    expect(isErr(result)).toBe(true);
+    if (isErr(result)) expect((result.error[0] as Error).message).toBe('boom');
   });
 });
 

@@ -4,8 +4,7 @@
  * @internal
  */
 
-import type { Result } from '../result.js';
-import { isOk } from '../result.js';
+import { isOk, Ok, Err, type Result } from '../result.js';
 
 // ============================================================================
 // ASYNC ARRAY TRANSFORMATIONS
@@ -119,10 +118,13 @@ export const reduceAsync =
 
 /**
  * Maps over an array with a concurrency limit, collecting all `Result` values.
- * Runs at most `concurrency` items at a time.
+ * Runs at most `concurrency` items at a time (must be ≥ 1).
  *
  * Returns `Ok(values)` when every item succeeds, or `Err(errors)` with **all**
  * failures accumulated (does not short-circuit on first error).
+ *
+ * If `fn` rejects (throws) rather than returning `Err`, the rejection is caught
+ * and stored as an error of type `unknown`. Prefer returning `Err` from `fn`.
  *
  * @example
  * const results = await mapConcurrentResult(3, async (id) =>
@@ -133,14 +135,16 @@ export const reduceAsync =
 export const mapConcurrentResult =
   <T, B, E>(concurrency: number, fn: (item: T) => Promise<Result<B, E>>) =>
   async (arr: T[]): Promise<Result<B[], E[]>> => {
+    if (concurrency < 1) throw new RangeError(`mapConcurrentResult: concurrency must be >= 1, got ${concurrency}`);
+
     const settled: Result<B, E>[] = new Array(arr.length);
     const executing = new Set<Promise<void>>();
 
     for (const [index, item] of arr.entries()) {
-      const p: Promise<void> = fn(item).then(r => {
-        settled[index] = r;
-        executing.delete(p);
-      });
+      const p: Promise<void> = fn(item)
+        .then(r => { settled[index] = r; })
+        .catch((e: unknown) => { settled[index] = Err(e as E); })
+        .finally(() => { executing.delete(p); });
       executing.add(p);
       if (executing.size >= concurrency) await Promise.race(executing);
     }
@@ -153,9 +157,7 @@ export const mapConcurrentResult =
       if (isOk(r)) values.push(r.value);
       else errors.push(r.error);
     }
-    return errors.length === 0
-      ? { ok: true, value: values }
-      : { ok: false, error: errors };
+    return errors.length === 0 ? Ok(values) : Err(errors);
   };
 
 /**
@@ -197,5 +199,5 @@ export const reduceAsyncResult =
       if (!isOk(r)) return r;
       acc = r.value;
     }
-    return { ok: true, value: acc };
+    return Ok(acc);
   };
