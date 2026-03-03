@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   Ok, Err,
   isOk, isErr,
@@ -10,6 +10,8 @@ import {
   tryCatch, tryCatchAsync,
   fromPromise,
   validateAll, validateAny,
+  mapResultAsync, flatMapAsync,
+  type Result,
 } from '../src/result.js';
 
 describe('Result — constructors', () => {
@@ -168,5 +170,43 @@ describe('Result — validation', () => {
 
   it('validateAny fails if all validators fail', () => {
     expect(isErr(validateAny([isPositive, isEven])(-3))).toBe(true);
+  });
+});
+
+describe('mapResultAsync', () => {
+  it('transforms the value of Ok asynchronously', async () => {
+    const result = await mapResultAsync(async (n: number) => n * 2)(Ok<number, string>(5));
+    expect(isOk(result)).toBe(true);
+    if (isOk(result)) expect(result.value).toBe(10);
+  });
+
+  it('passes Err through without calling the function', async () => {
+    const fn = vi.fn(async (n: number) => n * 2);
+    const result = await mapResultAsync(fn)(Err<number, string>('oops'));
+    expect(isErr(result)).toBe(true);
+    expect(fn).not.toHaveBeenCalled();
+  });
+});
+
+describe('flatMapAsync', () => {
+  const safeSqrt = async (n: number): Promise<Result<number, string>> =>
+    n >= 0 ? Ok(Math.sqrt(n)) : Err('negative');
+
+  it('chains an async Result-returning function on Ok', async () => {
+    const result = await flatMapAsync(safeSqrt)(Ok<number, string>(16));
+    expect(isOk(result)).toBe(true);
+    if (isOk(result)) expect(result.value).toBe(4);
+  });
+
+  it('short-circuits on Err without calling the function', async () => {
+    const fn = vi.fn(async (n: number): Promise<Result<number, string>> => Ok(n));
+    const result = await flatMapAsync(fn)(Err<number, string>('already failed'));
+    expect(isErr(result)).toBe(true);
+    expect(fn).not.toHaveBeenCalled();
+  });
+
+  it('propagates Err returned by the chained function', async () => {
+    const result = await flatMapAsync(safeSqrt)(Ok<number, string>(-1));
+    expect(isErr(result)).toBe(true);
   });
 });
