@@ -4,12 +4,13 @@ import {
   composeAsync,
   mapAsync, mapParallel, mapConcurrent,
   filterAsync, reduceAsync,
+  mapConcurrentResult, mapAsyncResult, reduceAsyncResult,
   retry, timeout, sleep,
   debounceAsync, throttleAsync,
   memoizeAsync,
   sequence, parallel,
 } from '../src/async.js';
-import { isOk, isErr } from '../src/result.js';
+import { Ok, Err, isOk, isErr, type Result } from '../src/result.js';
 
 describe('pipeAsync', () => {
   it('pipes async functions left-to-right', async () => {
@@ -265,5 +266,107 @@ describe('composeAsync', () => {
     const transform = composeAsync(double as (arg: unknown) => Promise<unknown>);
     const result = await transform(7);
     expect(result).toBe(14);
+  });
+});
+
+describe('mapConcurrentResult', () => {
+  it('returns Ok with all values when all succeed', async () => {
+    const fn = async (n: number) => Ok<number, string>(n * 2);
+    const result = await mapConcurrentResult(2, fn)([1, 2, 3]);
+    expect(isOk(result)).toBe(true);
+    if (isOk(result)) expect(result.value).toEqual([2, 4, 6]);
+  });
+
+  it('returns Err with all errors when all fail', async () => {
+    const fn = async (n: number) => Err<number, string>(`fail-${n}`);
+    const result = await mapConcurrentResult(2, fn)([1, 2]);
+    expect(isErr(result)).toBe(true);
+    if (isErr(result)) expect(result.error).toEqual(['fail-1', 'fail-2']);
+  });
+
+  it('accumulates errors without short-circuiting', async () => {
+    const fn = async (n: number) =>
+      n % 2 === 0 ? Ok<number, string>(n) : Err<number, string>(`odd-${n}`);
+    const result = await mapConcurrentResult(3, fn)([1, 2, 3, 4]);
+    expect(isErr(result)).toBe(true);
+    if (isErr(result)) expect(result.error).toEqual(['odd-1', 'odd-3']);
+  });
+
+  it('returns Ok([]) for empty array', async () => {
+    const fn = async (n: number) => Ok<number, string>(n);
+    const result = await mapConcurrentResult(2, fn)([]);
+    expect(isOk(result)).toBe(true);
+    if (isOk(result)) expect(result.value).toEqual([]);
+  });
+
+  it('respects ordering of results regardless of concurrency', async () => {
+    const delays = [30, 10, 20];
+    const fn = async (n: number) => {
+      await sleep(delays[n]);
+      return Ok<number, string>(n);
+    };
+    const result = await mapConcurrentResult(3, fn)([0, 1, 2]);
+    expect(isOk(result)).toBe(true);
+    if (isOk(result)) expect(result.value).toEqual([0, 1, 2]);
+  });
+
+  it('throws RangeError for concurrency < 1', async () => {
+    const fn = async (n: number) => Ok<number, string>(n);
+    await expect(mapConcurrentResult(0, fn)([1])).rejects.toThrow(RangeError);
+    await expect(mapConcurrentResult(-1, fn)([1])).rejects.toThrow(RangeError);
+  });
+
+  it('wraps fn rejections as Err entries', async () => {
+    const fn = async (n: number): Promise<Result<number, unknown>> => {
+      if (n === 2) throw new Error('boom');
+      return Ok(n);
+    };
+    const result = await mapConcurrentResult(2, fn)([1, 2, 3]);
+    expect(isErr(result)).toBe(true);
+    if (isErr(result)) expect((result.error[0] as Error).message).toBe('boom');
+  });
+});
+
+describe('mapAsyncResult', () => {
+  it('sequential — all succeed', async () => {
+    const fn = async (n: number) => Ok<number, string>(n + 10);
+    const result = await mapAsyncResult(fn)([1, 2, 3]);
+    expect(isOk(result)).toBe(true);
+    if (isOk(result)) expect(result.value).toEqual([11, 12, 13]);
+  });
+
+  it('sequential — accumulates all errors', async () => {
+    const fn = async (n: number) => Err<number, string>(`e${n}`);
+    const result = await mapAsyncResult(fn)([1, 2]);
+    expect(isErr(result)).toBe(true);
+    if (isErr(result)) expect(result.error).toEqual(['e1', 'e2']);
+  });
+});
+
+describe('reduceAsyncResult', () => {
+  it('returns Ok with final accumulator when all steps succeed', async () => {
+    const fn = async (acc: number, n: number) => Ok<number, string>(acc + n);
+    const result = await reduceAsyncResult(fn, 0)([1, 2, 3]);
+    expect(isOk(result)).toBe(true);
+    if (isOk(result)) expect(result.value).toBe(6);
+  });
+
+  it('stops on first error and returns Err', async () => {
+    const calls: number[] = [];
+    const fn = async (acc: number, n: number) => {
+      calls.push(n);
+      return n === 2 ? Err<number, string>('boom') : Ok<number, string>(acc + n);
+    };
+    const result = await reduceAsyncResult(fn, 0)([1, 2, 3]);
+    expect(isErr(result)).toBe(true);
+    if (isErr(result)) expect(result.error).toBe('boom');
+    expect(calls).toEqual([1, 2]); // 3 was never processed
+  });
+
+  it('returns Ok(initial) for empty array', async () => {
+    const fn = async (acc: number, n: number) => Ok<number, string>(acc + n);
+    const result = await reduceAsyncResult(fn, 42)([]);
+    expect(isOk(result)).toBe(true);
+    if (isOk(result)) expect(result.value).toBe(42);
   });
 });

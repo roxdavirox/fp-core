@@ -14,6 +14,9 @@ export {
   mapConcurrent,
   filterAsync,
   reduceAsync,
+  mapConcurrentResult,
+  mapAsyncResult,
+  reduceAsyncResult,
 } from './_internal/async-array.js';
 
 export {
