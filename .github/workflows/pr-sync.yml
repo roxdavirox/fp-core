@@ -1,0 +1,80 @@
+name: PR Sync
+
+on:
+  pull_request:
+    types: [opened, edited, reopened]
+
+jobs:
+  sync:
+    name: Sync labels, milestone and project from linked issue
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: read
+
+    steps:
+      - name: Sync PR with linked issue
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GH_PROJECT_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+
+            // Extract linked issue number from "Closes #N" / "Fixes #N" / "Resolves #N"
+            const match = body.match(/(?:closes|fixes|resolves)\s+#(\d+)/i);
+            if (!match) {
+              console.log('No linked issue found in PR body — skipping sync');
+              return;
+            }
+
+            const issueNumber = parseInt(match[1]);
+            console.log(`Linked issue: #${issueNumber}`);
+
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+            });
+
+            // Sync labels
+            if (issue.labels.length > 0) {
+              const labelNames = issue.labels.map(l => l.name);
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: labelNames,
+              });
+              console.log(`Labels synced: ${labelNames.join(', ')}`);
+            }
+
+            // Sync milestone
+            if (issue.milestone) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                milestone: issue.milestone.number,
+              });
+              console.log(`Milestone synced: ${issue.milestone.title}`);
+            }
+
+            // Add PR to mago-office project board via GraphQL
+            // Project node ID: PVT_kwHOAPDgbs4BQglq
+            const prNodeId = pr.node_id;
+            try {
+              await github.graphql(`
+                mutation($projectId: ID!, $contentId: ID!) {
+                  addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) {
+                    item { id }
+                  }
+                }
+              `, {
+                projectId: 'PVT_kwHOAPDgbs4BQglq',
+                contentId: prNodeId,
+              });
+              console.log('PR added to mago-office project board');
+            } catch (err) {
+              console.log(`Could not add to project board: ${err.message}`);
+            }

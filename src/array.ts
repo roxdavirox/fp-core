@@ -1,5 +1,5 @@
 /**
- * Funções utilitárias para transformação funcional de arrays
+ * Functional array transformation utilities.
  * @module array
  */
 
@@ -8,10 +8,10 @@
 // ============================================================================
 
 /**
- * Aplica função a cada elemento do array (curried)
+ * Applies a function to every element of an array (curried, data-last).
  *
  * @example
- * const double = (x) => x * 2;
+ * const double = (x: number) => x * 2;
  * map(double)([1, 2, 3]); // [2, 4, 6]
  */
 export const map =
@@ -20,10 +20,10 @@ export const map =
     arr.map(fn);
 
 /**
- * Filtra array baseado em predicado (curried)
+ * Keeps elements that satisfy a predicate (curried, data-last).
  *
  * @example
- * const isEven = (x) => x % 2 === 0;
+ * const isEven = (x: number) => x % 2 === 0;
  * filter(isEven)([1, 2, 3, 4]); // [2, 4]
  */
 export const filter =
@@ -32,10 +32,10 @@ export const filter =
     arr.filter(predicate);
 
 /**
- * Reduz array a um único valor (curried)
+ * Folds an array into a single value (curried, data-last).
  *
  * @example
- * const sum = (acc, x) => acc + x;
+ * const sum = (acc: number, x: number) => acc + x;
  * reduce(sum, 0)([1, 2, 3, 4]); // 10
  */
 export const reduce =
@@ -44,10 +44,10 @@ export const reduce =
     arr.reduce(fn, initial);
 
 /**
- * Mapeia e achata array (flatMap curried)
+ * Maps over an array and flattens one level (curried, data-last).
  *
  * @example
- * const duplicate = (x) => [x, x];
+ * const duplicate = (x: number) => [x, x];
  * flatMapArray(duplicate)([1, 2]); // [1, 1, 2, 2]
  */
 export const flatMapArray =
@@ -56,11 +56,12 @@ export const flatMapArray =
     arr.flatMap(fn);
 
 /**
- * Ordena array baseado em função de extração (curried)
+ * Sorts an array by a key extractor without mutating the original (curried, data-last).
  *
  * @example
  * const users = [{ name: 'Bob' }, { name: 'Alice' }];
- * sortBy(u => u.name)(users); // [{ name: 'Alice' }, { name: 'Bob' }]
+ * sortBy((u: { name: string }) => u.name)(users);
+ * // [{ name: 'Alice' }, { name: 'Bob' }]
  */
 export const sortBy =
   <T>(fn: (item: T) => string | number) =>
@@ -74,17 +75,15 @@ export const sortBy =
     });
 
 /**
- * Remove duplicados de array
+ * Removes duplicate values from an array, preserving insertion order.
  *
  * @example
- * unique()([1, 2, 2, 3, 1]); // [1, 2, 3]
+ * unique([1, 2, 2, 3, 1]); // [1, 2, 3]
  */
-export const unique =
-  <T>() =>
-  (arr: T[]): T[] => [...new Set(arr)];
+export const unique = <T>(arr: T[]): T[] => [...new Set(arr)];
 
 /**
- * Pega os primeiros N elementos de um array
+ * Returns the first N elements of an array (curried, data-last).
  *
  * @example
  * take(2)([1, 2, 3, 4]); // [1, 2]
@@ -95,7 +94,7 @@ export const take =
     arr.slice(0, n);
 
 /**
- * Pula os primeiros N elementos de um array
+ * Drops the first N elements of an array (curried, data-last).
  *
  * @example
  * skip(2)([1, 2, 3, 4]); // [3, 4]
@@ -106,10 +105,10 @@ export const skip =
     arr.slice(n);
 
 /**
- * Encontra primeiro elemento que satisfaz predicado
+ * Returns the first element that satisfies a predicate (curried, data-last).
  *
  * @example
- * const isEven = (x) => x % 2 === 0;
+ * const isEven = (x: number) => x % 2 === 0;
  * find(isEven)([1, 3, 4, 5]); // 4
  */
 export const find =
@@ -118,10 +117,10 @@ export const find =
     arr.find(predicate);
 
 /**
- * Verifica se algum elemento satisfaz predicado
+ * Returns true if at least one element satisfies the predicate (curried, data-last).
  *
  * @example
- * const isEven = (x) => x % 2 === 0;
+ * const isEven = (x: number) => x % 2 === 0;
  * some(isEven)([1, 3, 5]); // false
  * some(isEven)([1, 2, 3]); // true
  */
@@ -131,10 +130,10 @@ export const some =
     arr.some(predicate);
 
 /**
- * Verifica se todos elementos satisfazem predicado
+ * Returns true if every element satisfies the predicate (curried, data-last).
  *
  * @example
- * const isEven = (x) => x % 2 === 0;
+ * const isEven = (x: number) => x % 2 === 0;
  * every(isEven)([2, 4, 6]); // true
  * every(isEven)([2, 3, 4]); // false
  */
@@ -144,18 +143,18 @@ export const every =
     arr.every(predicate);
 
 /**
- * Agrupa elementos do array por chave
+ * Groups array elements by a key extractor (curried, data-last).
  *
  * @example
  * const users = [
  *   { name: 'Alice', role: 'admin' },
  *   { name: 'Bob', role: 'user' },
- *   { name: 'Charlie', role: 'admin' }
+ *   { name: 'Charlie', role: 'admin' },
  * ];
  * groupBy((u) => u.role)(users);
  * // {
  * //   admin: [{ name: 'Alice', role: 'admin' }, { name: 'Charlie', role: 'admin' }],
- * //   user: [{ name: 'Bob', role: 'user' }]
+ * //   user:  [{ name: 'Bob', role: 'user' }]
  * // }
  */
 export const groupBy =
@@ -173,7 +172,7 @@ export const groupBy =
   };
 
 /**
- * Conta ocorrências de cada elemento
+ * Counts occurrences of each key produced by the extractor (curried, data-last).
  *
  * @example
  * countBy((x: number) => x % 2 === 0 ? 'even' : 'odd')([1, 2, 3, 4]);
@@ -191,7 +190,8 @@ export const countBy =
   };
 
 /**
- * Particiona array em dois baseado em predicado
+ * Splits an array into two groups based on a predicate (curried, data-last).
+ * First tuple element contains matches; second contains non-matches.
  *
  * @example
  * const isEven = (x: number) => x % 2 === 0;
@@ -214,29 +214,23 @@ export const partition =
   };
 
 /**
- * Achata array em um nível
+ * Flattens a nested array one level deep.
  *
  * @example
- * flatten()([[1, 2], [3, 4]]); // [1, 2, 3, 4]
+ * flatten([[1, 2], [3, 4]]); // [1, 2, 3, 4]
  */
-export const flatten =
-  <T>() =>
-  (arr: T[][]): T[] =>
-    arr.flat();
+export const flatten = <T>(arr: T[][]): T[] => arr.flat();
 
 /**
- * Achata array profundamente
+ * Recursively flattens a deeply nested array.
  *
  * @example
- * flattenDeep()([1, [2, [3, [4]]]]); // [1, 2, 3, 4]
+ * flattenDeep([1, [2, [3, [4, [5]]]]]); // [1, 2, 3, 4, 5]
  */
-export const flattenDeep =
-  <T>() =>
-  (arr: unknown[]): T[] =>
-    arr.flat(Infinity) as T[];
+export const flattenDeep = <T>(arr: unknown[]): T[] => arr.flat(Infinity) as T[];
 
 /**
- * Zip - combina dois arrays em tuplas
+ * Combines two arrays into an array of tuples, truncated to the shorter length.
  *
  * @example
  * zip([1, 2, 3], ['a', 'b', 'c']);
@@ -252,7 +246,7 @@ export const zip = <T, U>(arr1: T[], arr2: U[]): Array<[T, U]> => {
 };
 
 /**
- * Unzip - separa array de tuplas em dois arrays
+ * Splits an array of tuples into two separate arrays.
  *
  * @example
  * unzip([[1, 'a'], [2, 'b'], [3, 'c']]);
@@ -269,7 +263,7 @@ export const unzip = <T, U>(arr: Array<[T, U]>): [T[], U[]] => {
 };
 
 /**
- * Chunk - divide array em pedaços de tamanho N
+ * Splits an array into chunks of a given size (curried, data-last).
  *
  * @example
  * chunk(2)([1, 2, 3, 4, 5]); // [[1, 2], [3, 4], [5]]
@@ -285,7 +279,7 @@ export const chunk =
   };
 
 /**
- * Removes falsy values from an array (null, undefined, false, 0, '').
+ * Removes falsy values from an array (`null`, `undefined`, `false`, `0`, `''`).
  *
  * @example
  * compact([0, 1, false, 2, '', 3, null, undefined]);
@@ -295,6 +289,10 @@ export const compact = <T>(arr: Array<T | null | undefined | false | 0 | ''>): T
   arr.filter(Boolean) as T[];
 
 /**
- * Verifica se array tem elementos
+ * Returns true if the value is a non-empty array.
+ *
+ * @example
+ * hasItems([1, 2]); // true
+ * hasItems([]);     // false
  */
 export const hasItems = <T>(arr: T[]): boolean => Array.isArray(arr) && arr.length > 0;

@@ -1,5 +1,5 @@
 /**
- * Funções assíncronas e Promise utilities
+ * Async composition and Promise utilities.
  * @module async
  */
 
@@ -10,11 +10,11 @@ import { Ok, Err, type Result } from './result.js';
 // ============================================================================
 
 /**
- * Versão assíncrona do pipe - compõe funções async da esquerda para direita
+ * Async version of `pipe` — composes async functions left to right.
  *
  * @example
  * const fetchUser = async (id: string) => ({ id, name: 'Alice' });
- * const getEmail = async (user: User) => user.email;
+ * const getEmail = async (user: { email: string }) => user.email;
  * const sendEmail = async (email: string) => console.log(`Sent to ${email}`);
  *
  * await pipeAsync(fetchUser, getEmail, sendEmail)('user-123');
@@ -64,20 +64,24 @@ export function pipeAsync(
 }
 
 /**
- * Versão assíncrona do compose - compõe funções async da direita para esquerda
+ * Async version of `compose` — composes async functions right to left.
+ *
+ * @example
+ * const process = composeAsync(formatUser, enrichUser, fetchUser);
+ * await process('user-123');
  */
 export const composeAsync = (...fns: Array<(arg: unknown) => Promise<unknown>>) =>
-  pipeAsync(...(fns.reverse() as [(typeof fns)[0]]));
+  pipeAsync(...([...fns].reverse() as [(typeof fns)[0]]));
 
 // ============================================================================
 // ASYNC ARRAY TRANSFORMATIONS
 // ============================================================================
 
 /**
- * Map assíncrono - aplica função async a cada elemento em sequência
+ * Applies an async function to each element sequentially (curried, data-last).
  *
  * @example
- * const fetchUserDetails = async (id: string) => ({ id, name: '...' });
+ * const fetchUserDetails = async (id: string) => ({ id, name: 'Alice' });
  * await mapAsync(fetchUserDetails)(['1', '2', '3']);
  */
 export const mapAsync =
@@ -91,10 +95,10 @@ export const mapAsync =
   };
 
 /**
- * Map assíncrono paralelo - aplica função async a todos elementos em paralelo
+ * Applies an async function to all elements in parallel (curried, data-last).
  *
  * @example
- * const fetchUser = async (id: string) => ({ id, name: '...' });
+ * const fetchUser = async (id: string) => ({ id, name: 'Alice' });
  * await mapParallel(fetchUser)(['1', '2', '3']);
  */
 export const mapParallel =
@@ -103,12 +107,12 @@ export const mapParallel =
     Promise.all(arr.map(fn));
 
 /**
- * Map assíncrono com limite de concorrência
+ * Applies an async function with a concurrency limit (curried, data-last).
  *
  * @example
- * const fetchUser = async (id: string) => ({ id, name: '...' });
- * // Processa 5 por vez
- * await mapConcurrent(5, fetchUser)(['1', '2', '3', ...]);
+ * const fetchUser = async (id: string) => ({ id, name: 'Alice' });
+ * // Processes 5 at a time
+ * await mapConcurrent(5, fetchUser)(['1', '2', '3', '4', '5', '6']);
  */
 export const mapConcurrent =
   <T, R>(concurrency: number, fn: (item: T) => Promise<R>) =>
@@ -134,10 +138,10 @@ export const mapConcurrent =
   };
 
 /**
- * Filter assíncrono - filtra elementos com predicado async
+ * Filters an array using an async predicate sequentially (curried, data-last).
  *
  * @example
- * const isActive = async (user: User) => {
+ * const isActive = async (user: { id: string }) => {
  *   const status = await fetchStatus(user.id);
  *   return status === 'active';
  * };
@@ -156,10 +160,10 @@ export const filterAsync =
   };
 
 /**
- * Reduce assíncrono - reduz array com função async
+ * Reduces an array with an async reducer sequentially (curried, data-last).
  *
  * @example
- * const sumBalances = async (acc: number, user: User) => {
+ * const sumBalances = async (acc: number, user: { id: string }) => {
  *   const balance = await fetchBalance(user.id);
  *   return acc + balance;
  * };
@@ -180,11 +184,11 @@ export const reduceAsync =
 // ============================================================================
 
 /**
- * Retry - tenta executar função com retry exponencial.
- * Retorna Result<T, Error> — nunca lança exceção.
+ * Retries an async function with exponential backoff.
+ * Returns `Result<T, Error>` — never throws.
  *
  * @example
- * const result = await retry(3, 1000)(fetchData); // 3 tentativas, 1s inicial
+ * const result = await retry(3, 1000)(fetchData); // 3 attempts, 1s base delay
  * if (!result.ok) console.error(result.error.message);
  */
 export const retry =
@@ -210,11 +214,11 @@ export const retry =
   };
 
 /**
- * Timeout - limita tempo de execução de Promise
+ * Races a promise against a timeout, rejecting if the deadline is exceeded.
  *
  * @example
  * const slowFetch = async () => fetch('/slow-endpoint');
- * await timeout(5000)(slowFetch()); // Falha se > 5s
+ * await timeout(5000)(slowFetch()); // rejects if it takes more than 5s
  */
 export const timeout =
   <T>(ms: number) =>
@@ -227,25 +231,26 @@ export const timeout =
   };
 
 /**
- * Sleep - aguarda N milissegundos
+ * Resolves after a given number of milliseconds.
  *
  * @example
- * await sleep(1000); // Aguarda 1 segundo
+ * await sleep(1000); // waits 1 second
  */
 export const sleep = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
- * Debounce assíncrono - só executa após período de inatividade
+ * Returns a debounced version of an async function.
+ * Only executes after the specified delay has elapsed since the last call.
  *
  * @example
- * const saveData = debounceAsync(500)(async (data) => {
+ * const saveData = debounceAsync(500)(async (data: string) => {
  *   await api.save(data);
  * });
  *
- * // Só salva 500ms após última chamada
- * saveData(data1);
- * saveData(data2);
- * saveData(data3); // Apenas esta executará
+ * // Only the last call within 500ms will execute
+ * saveData('a');
+ * saveData('b');
+ * saveData('c'); // only this one runs
  */
 export const debounceAsync =
   <T extends unknown[], R>(delayMs: number) =>
@@ -276,17 +281,18 @@ export const debounceAsync =
   };
 
 /**
- * Throttle assíncrono - limita taxa de execução
+ * Returns a throttled version of an async function.
+ * At most one execution per delay window; subsequent calls within the window
+ * return the pending promise from the active execution.
  *
  * @example
- * const logEvent = throttleAsync(1000)(async (event) => {
+ * const logEvent = throttleAsync(1000)(async (event: string) => {
  *   await api.log(event);
  * });
  *
- * // Máximo 1 chamada por segundo
- * logEvent(event1); // Executa
- * logEvent(event2); // Ignora
- * logEvent(event3); // Ignora
+ * // At most 1 call per second
+ * logEvent('click'); // executes
+ * logEvent('click'); // returns same promise
  */
 export const throttleAsync =
   <T extends unknown[], R>(delayMs: number) =>
@@ -314,16 +320,14 @@ export const throttleAsync =
   };
 
 /**
- * Memoize assíncrono - cache de resultados de Promise.
- * Retorna Result<T, Error> — nunca relança exceção.
+ * Memoizes an async function. Returns `Result<T, Error>` — never rethrows.
+ * Cached results are returned on subsequent calls with the same arguments.
  *
  * @example
- * const fetchUser = memoizeAsync(async (id: string) => {
- *   return await api.getUser(id);
- * });
+ * const fetchUser = memoizeAsync(async (id: string) => api.getUser(id));
  *
- * const r1 = await fetchUser('123'); // API call → Ok(user)
- * const r2 = await fetchUser('123'); // Cached → Ok(user)
+ * const r1 = await fetchUser('123'); // network call -> Ok(user)
+ * const r2 = await fetchUser('123'); // cached       -> Ok(user)
  */
 export const memoizeAsync = <T extends unknown[], R>(
   fn: (...args: T) => Promise<R>,
@@ -349,15 +353,14 @@ export const memoizeAsync = <T extends unknown[], R>(
 };
 
 /**
- * Sequence - executa array de funções async em sequência
+ * Executes an array of async thunks sequentially, collecting results.
  *
  * @example
  * const tasks = [
- *   async () => console.log('Task 1'),
- *   async () => console.log('Task 2'),
- *   async () => console.log('Task 3')
+ *   async () => 'task 1 done',
+ *   async () => 'task 2 done',
  * ];
- * await sequence(tasks); // Executa em ordem
+ * await sequence(tasks); // ['task 1 done', 'task 2 done']
  */
 export const sequence = async <T>(fns: Array<() => Promise<T>>): Promise<T[]> => {
   const results: T[] = [];
@@ -368,15 +371,15 @@ export const sequence = async <T>(fns: Array<() => Promise<T>>): Promise<T[]> =>
 };
 
 /**
- * Parallel - executa array de funções async em paralelo
+ * Executes an array of async thunks in parallel, collecting results.
  *
  * @example
  * const tasks = [
  *   async () => fetchUser('1'),
  *   async () => fetchUser('2'),
- *   async () => fetchUser('3')
+ *   async () => fetchUser('3'),
  * ];
- * await parallel(tasks); // Executa simultaneamente
+ * await parallel(tasks);
  */
 export const parallel = async <T>(fns: Array<() => Promise<T>>): Promise<T[]> =>
   Promise.all(fns.map(fn => fn()));

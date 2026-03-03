@@ -1,5 +1,5 @@
 /**
- * Utilitários funcionais para manipulação de strings
+ * Functional string utilities.
  * @module string
  */
 
@@ -8,7 +8,7 @@
 // ============================================================================
 
 /**
- * ToUpperCase - converte para maiúsculas
+ * Converts a string to upper case.
  *
  * @example
  * toUpperCase('hello'); // 'HELLO'
@@ -16,7 +16,7 @@
 export const toUpperCase = (str: string): string => str.toUpperCase();
 
 /**
- * ToLowerCase - converte para minúsculas
+ * Converts a string to lower case.
  *
  * @example
  * toLowerCase('HELLO'); // 'hello'
@@ -24,7 +24,7 @@ export const toUpperCase = (str: string): string => str.toUpperCase();
 export const toLowerCase = (str: string): string => str.toLowerCase();
 
 /**
- * Trim - remove espaços em branco
+ * Removes leading and trailing whitespace.
  *
  * @example
  * trim('  hello  '); // 'hello'
@@ -32,7 +32,7 @@ export const toLowerCase = (str: string): string => str.toLowerCase();
 export const trim = (str: string): string => str.trim();
 
 /**
- * TrimStart - remove espaços do início
+ * Removes leading whitespace.
  *
  * @example
  * trimStart('  hello'); // 'hello'
@@ -40,7 +40,7 @@ export const trim = (str: string): string => str.trim();
 export const trimStart = (str: string): string => str.trimStart();
 
 /**
- * TrimEnd - remove espaços do final
+ * Removes trailing whitespace.
  *
  * @example
  * trimEnd('hello  '); // 'hello'
@@ -48,7 +48,7 @@ export const trimStart = (str: string): string => str.trimStart();
 export const trimEnd = (str: string): string => str.trimEnd();
 
 /**
- * Split - divide string em array
+ * Splits a string into an array by a separator (curried, data-last).
  *
  * @example
  * split(',')('a,b,c'); // ['a', 'b', 'c']
@@ -59,7 +59,7 @@ export const split =
     str.split(separator);
 
 /**
- * Join - junta array em string
+ * Joins an array of strings with a separator (curried, data-last).
  *
  * @example
  * join(', ')(['a', 'b', 'c']); // 'a, b, c'
@@ -70,7 +70,7 @@ export const join =
     arr.join(separator);
 
 /**
- * Replace - substitui substring
+ * Replaces the first match of a search pattern (curried, data-last).
  *
  * @example
  * replace('hello', 'hi')('hello world'); // 'hi world'
@@ -81,10 +81,10 @@ export const replace =
     str.replace(search, replacement);
 
 /**
- * ReplaceAll - substitui todas ocorrências
+ * Replaces all matches of a search pattern (curried, data-last).
  *
  * @example
- * replaceAll('o', '0')('foo'); // 'f00'
+ * replaceAll('o', '0')('foo bar'); // 'f00 bar'
  */
 export const replaceAll =
   (search: string | RegExp, replacement: string) =>
@@ -92,7 +92,7 @@ export const replaceAll =
     str.replaceAll(search, replacement);
 
 /**
- * Capitalize - primeira letra maiúscula
+ * Capitalizes the first character and lowercases the rest.
  *
  * @example
  * capitalize('hello world'); // 'Hello world'
@@ -101,7 +101,7 @@ export const capitalize = (str: string): string =>
   str.length === 0 ? str : str[0].toUpperCase() + str.slice(1).toLowerCase();
 
 /**
- * CamelCase - converte para camelCase
+ * Converts a string to camelCase.
  *
  * @example
  * camelCase('hello world'); // 'helloWorld'
@@ -111,7 +111,7 @@ export const camelCase = (str: string): string =>
   str.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (_, chr) => chr.toUpperCase());
 
 /**
- * PascalCase - converte para PascalCase
+ * Converts a string to PascalCase.
  *
  * @example
  * pascalCase('hello world'); // 'HelloWorld'
@@ -122,7 +122,7 @@ export const pascalCase = (str: string): string => {
 };
 
 /**
- * SnakeCase - converte para snake_case
+ * Converts a string to snake_case.
  *
  * @example
  * snakeCase('helloWorld'); // 'hello_world'
@@ -135,7 +135,7 @@ export const snakeCase = (str: string): string =>
     .replace(/\s+/g, '_');
 
 /**
- * KebabCase - converte para kebab-case
+ * Converts a string to kebab-case.
  *
  * @example
  * kebabCase('helloWorld'); // 'hello-world'
@@ -148,7 +148,7 @@ export const kebabCase = (str: string): string =>
     .replace(/\s+/g, '-');
 
 /**
- * TitleCase - primeira letra de cada palavra maiúscula
+ * Capitalizes the first letter of each word.
  *
  * @example
  * titleCase('hello world'); // 'Hello World'
@@ -165,7 +165,7 @@ export const titleCase = (str: string): string =>
 // ============================================================================
 
 /**
- * StartsWith - verifica se começa com substring
+ * Returns true if the string starts with the given substring (curried, data-last).
  *
  * @example
  * startsWith('hello')('hello world'); // true
@@ -176,7 +176,7 @@ export const startsWith =
     str.startsWith(search);
 
 /**
- * EndsWith - verifica se termina com substring
+ * Returns true if the string ends with the given substring (curried, data-last).
  *
  * @example
  * endsWith('world')('hello world'); // true
@@ -187,7 +187,7 @@ export const endsWith =
     str.endsWith(search);
 
 /**
- * Includes - verifica se contém substring
+ * Returns true if the string contains the given substring (curried, data-last).
  *
  * @example
  * includes('llo')('hello'); // true
@@ -198,7 +198,7 @@ export const includes =
     str.includes(search);
 
 /**
- * Matches - verifica se combina com regex
+ * Returns true if the string matches the given regex (curried, data-last).
  *
  * @example
  * matches(/^\d+$/)('123'); // true
@@ -209,25 +209,25 @@ export const matches =
     regex.test(str);
 
 /**
- * IsEmptyString - verifica se string está vazia
+ * Returns true if the string has zero characters.
  *
  * @example
- * isEmptyString(''); // true
- * isEmptyString('  '); // false (tem espaços)
+ * isEmptyString('');   // true
+ * isEmptyString('  '); // false
  */
 export const isEmptyString = (str: string): boolean => str.length === 0;
 
 /**
- * IsBlank - verifica se string está vazia ou só tem espaços
+ * Returns true if the string is empty or contains only whitespace.
  *
  * @example
- * isBlank(''); // true
+ * isBlank('');   // true
  * isBlank('  '); // true
  */
 export const isBlank = (str: string): boolean => str.trim().length === 0;
 
 /**
- * Length - retorna tamanho da string
+ * Returns the number of characters in the string.
  *
  * @example
  * length('hello'); // 5
@@ -239,7 +239,7 @@ export const length = (str: string): number => str.length;
 // ============================================================================
 
 /**
- * Slice - extrai substring
+ * Extracts a section of the string (curried, data-last).
  *
  * @example
  * slice(0, 5)('hello world'); // 'hello'
@@ -250,7 +250,7 @@ export const slice =
     str.slice(start, end);
 
 /**
- * Substring - extrai substring
+ * Extracts characters between two indices (curried, data-last).
  *
  * @example
  * substring(0, 5)('hello world'); // 'hello'
@@ -261,7 +261,7 @@ export const substring =
     str.substring(start, end);
 
 /**
- * PadStart - preenche início
+ * Pads the start of a string to the target length (curried, data-last).
  *
  * @example
  * padStart(5, '0')('42'); // '00042'
@@ -272,7 +272,7 @@ export const padStart =
     str.padStart(length, fillString);
 
 /**
- * PadEnd - preenche final
+ * Pads the end of a string to the target length (curried, data-last).
  *
  * @example
  * padEnd(5, '0')('42'); // '42000'
@@ -283,7 +283,7 @@ export const padEnd =
     str.padEnd(length, fillString);
 
 /**
- * Repeat - repete string N vezes
+ * Repeats a string N times (curried, data-last).
  *
  * @example
  * repeat(3)('ha'); // 'hahaha'
@@ -294,7 +294,7 @@ export const repeat =
     str.repeat(count);
 
 /**
- * Reverse - inverte string
+ * Reverses the characters of a string.
  *
  * @example
  * reverse('hello'); // 'olleh'
@@ -302,7 +302,7 @@ export const repeat =
 export const reverse = (str: string): string => str.split('').reverse().join('');
 
 /**
- * Truncate - trunca string com ellipsis
+ * Truncates a string to the given length, appending a suffix if cut.
  *
  * @example
  * truncate(10)('hello world'); // 'hello w...'
@@ -314,7 +314,7 @@ export const truncate =
     str.length <= maxLength ? str : str.slice(0, maxLength - suffix.length) + suffix;
 
 /**
- * Words - extrai palavras
+ * Extracts all words from a string.
  *
  * @example
  * words('hello world'); // ['hello', 'world']
@@ -322,7 +322,7 @@ export const truncate =
 export const words = (str: string): string[] => str.match(/\b\w+\b/g) || [];
 
 /**
- * Lines - divide em linhas
+ * Splits a string into lines.
  *
  * @example
  * lines('hello\nworld'); // ['hello', 'world']
@@ -330,7 +330,7 @@ export const words = (str: string): string[] => str.match(/\b\w+\b/g) || [];
 export const lines = (str: string): string[] => str.split(/\r?\n/);
 
 /**
- * Indent - adiciona indentação
+ * Adds indentation to every line of a string (curried, data-last).
  *
  * @example
  * indent(2)('hello\nworld');
@@ -347,7 +347,7 @@ export const indent =
   };
 
 /**
- * Dedent - remove indentação comum
+ * Removes the common leading whitespace from all lines.
  *
  * @example
  * dedent('  hello\n  world');
@@ -374,7 +374,7 @@ export const dedent = (str: string): string => {
 // ============================================================================
 
 /**
- * Template - template string com substituições
+ * Interpolates `{{key}}` placeholders using a values object (curried, data-last).
  *
  * @example
  * template({ name: 'Alice', age: 30 })('Hello {{name}}, you are {{age}}');
@@ -386,7 +386,7 @@ export const template =
     str.replace(/\{\{(\w+)\}\}/g, (_, key) => String(values[key] ?? `{{${key}}}`));
 
 /**
- * Format - formata string estilo printf
+ * Formats a string using printf-style `%s` and `%d` placeholders (curried, data-last).
  *
  * @example
  * format('Hello %s, you are %d years old')('Alice', 30);
@@ -409,7 +409,7 @@ export const format =
 // ============================================================================
 
 /**
- * IsEmail - valida email
+ * Returns true if the string is a valid email address.
  *
  * @example
  * isEmail('user@example.com'); // true
@@ -417,7 +417,7 @@ export const format =
 export const isEmail = (str: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str);
 
 /**
- * IsUrl - valida URL
+ * Returns true if the string is a valid URL.
  *
  * @example
  * isUrl('https://example.com'); // true
@@ -432,25 +432,26 @@ export const isUrl = (str: string): boolean => {
 };
 
 /**
- * IsNumeric - verifica se é numérico
+ * Returns true if the string represents a finite number.
  *
  * @example
- * isNumeric('123'); // true
+ * isNumeric('123');   // true
  * isNumeric('12.34'); // true
+ * isNumeric('abc');   // false
  */
 export const isNumeric = (str: string): boolean => !isNaN(Number(str)) && !isNaN(parseFloat(str));
 
 /**
- * IsAlpha - apenas letras
+ * Returns true if the string contains only alphabetic characters.
  *
  * @example
- * isAlpha('hello'); // true
+ * isAlpha('hello');    // true
  * isAlpha('hello123'); // false
  */
 export const isAlpha = (str: string): boolean => /^[a-zA-Z]+$/.test(str);
 
 /**
- * IsAlphanumeric - letras e números
+ * Returns true if the string contains only alphanumeric characters.
  *
  * @example
  * isAlphanumeric('hello123'); // true
@@ -458,16 +459,16 @@ export const isAlpha = (str: string): boolean => /^[a-zA-Z]+$/.test(str);
 export const isAlphanumeric = (str: string): boolean => /^[a-zA-Z0-9]+$/.test(str);
 
 /**
- * IsHexColor - valida cor hexadecimal
+ * Returns true if the string is a valid hexadecimal colour code.
  *
  * @example
  * isHexColor('#FF0000'); // true
- * isHexColor('#F00'); // true
+ * isHexColor('#F00');    // true
  */
 export const isHexColor = (str: string): boolean => /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(str);
 
 /**
- * IsUUID - valida UUID
+ * Returns true if the string is a valid UUID (v1–v5).
  *
  * @example
  * isUUID('550e8400-e29b-41d4-a716-446655440000'); // true

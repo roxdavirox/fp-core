@@ -1,5 +1,5 @@
 /**
- * Utilit\u00e1rios para manipula\u00e7\u00e3o funcional de objetos
+ * Functional object manipulation utilities.
  * @module object
  */
 
@@ -8,7 +8,7 @@
 // ============================================================================
 
 /**
- * Pick - seleciona propriedades de objeto
+ * Returns a new object containing only the specified keys (curried, data-last).
  *
  * @example
  * const user = { id: 1, name: 'Alice', email: 'alice@example.com', age: 30 };
@@ -28,7 +28,7 @@ export const pick =
   };
 
 /**
- * Omit - remove propriedades de objeto
+ * Returns a new object with the specified keys removed (curried, data-last).
  *
  * @example
  * const user = { id: 1, name: 'Alice', password: 'secret' };
@@ -46,7 +46,7 @@ export const omit =
   };
 
 /**
- * Merge - combina dois objetos (shallow)
+ * Shallow-merges two objects, with the override taking precedence (curried, data-last).
  *
  * @example
  * const defaults = { theme: 'dark', lang: 'en' };
@@ -62,7 +62,7 @@ export const merge =
   });
 
 /**
- * DeepMerge - combina objetos recursivamente
+ * Recursively merges two objects. Arrays are replaced, not merged (curried, data-last).
  *
  * @example
  * const obj1 = { a: 1, b: { c: 2, d: 3 } };
@@ -95,7 +95,7 @@ export const deepMerge =
   };
 
 /**
- * MapValues - mapeia valores de objeto
+ * Transforms every value in an object, preserving keys (curried, data-last).
  *
  * @example
  * const prices = { apple: 10, banana: 5, orange: 8 };
@@ -115,7 +115,7 @@ export const mapValues =
   };
 
 /**
- * MapKeys - mapeia chaves de objeto
+ * Transforms every key in an object, preserving values (curried, data-last).
  *
  * @example
  * const obj = { first_name: 'Alice', last_name: 'Smith' };
@@ -136,7 +136,8 @@ export const mapKeys =
   };
 
 /**
- * FilterKeys - filtra objeto por predicado de chave
+ * Returns a partial object containing only entries whose key passes the predicate
+ * (curried, data-last).
  *
  * @example
  * const obj = { name: 'Alice', age: 30, _internal: true };
@@ -156,7 +157,8 @@ export const filterKeys =
   };
 
 /**
- * FilterValues - filtra objeto por predicado de valor
+ * Returns a partial object containing only entries whose value passes the predicate
+ * (curried, data-last).
  *
  * @example
  * const obj = { a: 1, b: null, c: 3, d: undefined };
@@ -183,7 +185,7 @@ export const filterValues =
 // ============================================================================
 
 /**
- * Keys - retorna chaves de objeto
+ * Returns the keys of an object as a typed array.
  *
  * @example
  * keys({ a: 1, b: 2, c: 3 });
@@ -193,7 +195,7 @@ export const keys = <T extends object>(obj: T): Array<keyof T> =>
   Object.keys(obj) as Array<keyof T>;
 
 /**
- * Values - retorna valores de objeto
+ * Returns the values of an object as an array.
  *
  * @example
  * values({ a: 1, b: 2, c: 3 });
@@ -202,7 +204,7 @@ export const keys = <T extends object>(obj: T): Array<keyof T> =>
 export const values = <T extends object>(obj: T): Array<T[keyof T]> => Object.values(obj);
 
 /**
- * Entries - retorna pares [chave, valor]
+ * Returns `[key, value]` pairs for an object.
  *
  * @example
  * entries({ a: 1, b: 2 });
@@ -212,7 +214,7 @@ export const entries = <T extends object>(obj: T): Array<[keyof T, T[keyof T]]> 
   Object.entries(obj) as Array<[keyof T, T[keyof T]]>;
 
 /**
- * FromEntries - cria objeto a partir de pares [chave, valor]
+ * Reconstructs an object from an array of `[key, value]` pairs.
  *
  * @example
  * fromEntries([['a', 1], ['b', 2]]);
@@ -222,11 +224,10 @@ export const fromEntries = <K extends string, V>(entries: Array<[K, V]>): Record
   Object.fromEntries(entries) as Record<K, V>;
 
 /**
- * HasKey - verifica se objeto tem chave
+ * Returns true if the given key exists in the object (curried, data-last).
  *
  * @example
- * hasKey('name')({ name: 'Alice', age: 30 });
- * // true
+ * hasKey('name')({ name: 'Alice', age: 30 }); // true
  */
 export const hasKey =
   <T extends object, K extends keyof T>(key: K) =>
@@ -234,7 +235,8 @@ export const hasKey =
     key in obj;
 
 /**
- * GetPath - extrai valor de caminho aninhado (type-safe)
+ * Reads a value from an arbitrarily nested path. Returns `undefined` if any
+ * segment along the path is missing (curried, data-last).
  *
  * @example
  * const user = { profile: { name: 'Alice' } };
@@ -253,7 +255,8 @@ export const getPath =
   };
 
 /**
- * SetPath - define valor em caminho aninhado (imutável)
+ * Returns a new object with the value at the given path replaced.
+ * Does not mutate the original (curried, data-last).
  *
  * @example
  * const user = { profile: { name: 'Alice' } };
@@ -282,7 +285,8 @@ export const setPath =
   };
 
 /**
- * UpdatePath - atualiza valor em caminho aninhado (imutável)
+ * Applies a function to the value at the given path and returns a new object.
+ * Does not mutate the original (curried, data-last).
  *
  * @example
  * const user = { profile: { age: 30 } };
@@ -302,7 +306,7 @@ export const updatePath =
 // ============================================================================
 
 /**
- * IsEmpty - verifica se objeto está vazio
+ * Returns true if the object has no own enumerable properties.
  *
  * @example
  * isEmpty({}); // true
@@ -311,7 +315,7 @@ export const updatePath =
 export const isEmpty = <T extends object>(obj: T): boolean => Object.keys(obj).length === 0;
 
 /**
- * IsObject - verifica se é objeto (não array, não null)
+ * Returns true if the value is a plain object (not an array, not null).
  *
  * @example
  * isObject({}); // true
@@ -322,11 +326,11 @@ export const isObject = (value: unknown): value is object =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
- * Equals - comparação deep de objetos
+ * Deep-equality comparison for two objects (curried, data-last).
  *
  * @example
- * equals({ a: 1, b: { c: 2 } })({ a: 1, b: { c: 2 } });
- * // true
+ * equals({ a: 1, b: { c: 2 } })({ a: 1, b: { c: 2 } }); // true
+ * equals({ a: 1 })({ a: 2 }); // false
  */
 export const equals =
   <T extends object>(obj1: T) =>
@@ -362,13 +366,13 @@ export const equals =
   };
 
 /**
- * Clone - clona objeto profundamente
+ * Returns a deep clone of the value. Handles plain objects, arrays, and Dates.
  *
  * @example
  * const original = { a: 1, b: { c: 2 } };
- * const cloned = clone(original);
- * cloned.b.c = 999;
- * console.log(original.b.c); // 2 (não foi modificado)
+ * const copy = clone(original);
+ * copy.b.c = 999;
+ * console.log(original.b.c); // 2 — original is unchanged
  */
 export const clone = <T>(obj: T): T => {
   if (obj === null || typeof obj !== 'object') {
@@ -397,12 +401,11 @@ export const clone = <T>(obj: T): T => {
 };
 
 /**
- * Freeze - congela objeto profundamente (imutável)
+ * Recursively freezes an object, making it and all nested objects immutable.
  *
  * @example
  * const obj = freeze({ a: 1, b: { c: 2 } });
- * obj.a = 999; // Erro em strict mode
- * obj.b.c = 999; // Erro em strict mode
+ * obj.a = 999; // throws in strict mode
  */
 export const freeze = <T extends object>(obj: T): Readonly<T> => {
   Object.freeze(obj);
