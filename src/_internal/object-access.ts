@@ -127,6 +127,68 @@ export const updatePath =
     return setPath(path, newValue)(obj) as T;
   };
 
+/**
+ * Like {@link getPath} but returns a fallback value instead of `undefined`
+ * when the path is missing (curried, data-last).
+ *
+ * @example
+ * const obj = { a: { b: { c: 42 } } };
+ * getPathOr(0, ['a', 'b', 'c'])(obj); // 42
+ * getPathOr(0, ['a', 'b', 'x'])(obj); // 0
+ */
+export const getPathOr =
+  <T>(fallback: T, path: string[]) =>
+  (obj: object): T => {
+    const result = getPath(path)(obj);
+    return result !== undefined ? (result as T) : fallback;
+  };
+
+/**
+ * Returns `true` if the nested path exists in the object, even when the value
+ * at that path is `null` or `undefined` (curried, data-last).
+ *
+ * @example
+ * hasPath(['a', 'b', 'c'])({ a: { b: { c: null } } }); // true
+ * hasPath(['a', 'b', 'x'])({ a: { b: { c: 1 } } });    // false
+ */
+export const hasPath =
+  (path: string[]) =>
+  (obj: unknown): boolean => {
+    if (path.length === 0) return true;
+    let current: unknown = obj;
+    for (const key of path) {
+      if (current === null || typeof current !== 'object') return false;
+      if (!Object.prototype.hasOwnProperty.call(current, key)) return false;
+      current = (current as Record<string, unknown>)[key];
+    }
+    return true;
+  };
+
+/**
+ * Returns a new object with the value at the given path removed.
+ * Does not mutate the original (curried, data-last).
+ *
+ * @example
+ * deletePath(['a', 'b'])({ a: { b: 1, c: 2 } });
+ * // { a: { c: 2 } }
+ */
+export const deletePath =
+  (path: string[]) =>
+  <T extends object>(obj: T): T => {
+    if (path.length === 0) return obj;
+    const [head, ...tail] = path;
+    if (tail.length === 0) {
+      const { [head]: _removed, ...rest } = obj as Record<string, unknown>;
+      return rest as T;
+    }
+    const current = (obj as Record<string, unknown>)[head];
+    if (!isObject(current)) return obj;
+    return {
+      ...obj,
+      [head]: deletePath(tail)(current as object),
+    } as T;
+  };
+
 // ============================================================================
 // TYPE UTILITIES
 // ============================================================================

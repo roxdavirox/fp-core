@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
-  pick, omit, merge, deepMerge,
+  pick, omit, merge, deepMerge, defaults,
   mapValues, mapKeys, filterKeys, filterValues,
   keys, values, entries, fromEntries,
-  hasKey, getPath, setPath, updatePath,
+  hasKey, getPath, setPath, updatePath, getPathOr, hasPath, deletePath,
   isEmpty, isObject, equals, clone, freeze,
   deepEquals, deepClone,
 } from '../src/object.js';
@@ -336,5 +336,110 @@ describe('deepClone', () => {
     const copy = deepClone(obj) as Record<string, unknown>;
     expect(copy['self']).toBe(copy);
     expect(copy).not.toBe(obj);
+  });
+});
+
+describe('getPathOr', () => {
+  it('returns the value when path exists', () => {
+    const obj = { a: { b: { c: 42 } } };
+    expect(getPathOr(0, ['a', 'b', 'c'])(obj)).toBe(42);
+  });
+
+  it('returns the fallback when path is missing', () => {
+    const obj = { a: { b: {} } };
+    expect(getPathOr(0, ['a', 'b', 'x'])(obj)).toBe(0);
+  });
+
+  it('returns the fallback when an intermediate segment is missing', () => {
+    expect(getPathOr('default', ['x', 'y'])({ a: 1 })).toBe('default');
+  });
+
+  it('returns value 0 (falsy) correctly — not confused with fallback', () => {
+    expect(getPathOr(99, ['n'])({ n: 0 })).toBe(0);
+  });
+
+  it('returns false correctly', () => {
+    expect(getPathOr(true, ['flag'])({ flag: false })).toBe(false);
+  });
+});
+
+describe('hasPath', () => {
+  it('returns true for an existing path with a normal value', () => {
+    expect(hasPath(['a', 'b'])({ a: { b: 1 } })).toBe(true);
+  });
+
+  it('returns true even when the value is null', () => {
+    expect(hasPath(['a', 'b'])({ a: { b: null } })).toBe(true);
+  });
+
+  it('returns true even when the value is undefined', () => {
+    expect(hasPath(['a', 'b'])({ a: { b: undefined } })).toBe(true);
+  });
+
+  it('returns false for a missing key', () => {
+    expect(hasPath(['a', 'x'])({ a: { b: 1 } })).toBe(false);
+  });
+
+  it('returns false when an intermediate segment is missing', () => {
+    expect(hasPath(['a', 'b', 'c'])({ a: {} })).toBe(false);
+  });
+
+  it('returns false when an intermediate segment is not an object', () => {
+    expect(hasPath(['a', 'b'])({ a: 42 })).toBe(false);
+  });
+
+  it('returns true for an empty path', () => {
+    expect(hasPath([])({ a: 1 })).toBe(true);
+  });
+});
+
+describe('deletePath', () => {
+  it('removes a top-level key', () => {
+    expect(deletePath(['b'])({ a: 1, b: 2, c: 3 })).toEqual({ a: 1, c: 3 });
+  });
+
+  it('removes a nested key without mutating the original', () => {
+    const obj = { a: { b: 1, c: 2 } };
+    const result = deletePath(['a', 'b'])(obj);
+    expect(result).toEqual({ a: { c: 2 } });
+    expect(obj.a.b).toBe(1);
+  });
+
+  it('returns the object unchanged for an empty path', () => {
+    const obj = { a: 1 };
+    expect(deletePath([])(obj)).toEqual({ a: 1 });
+  });
+
+  it('returns the object unchanged when path does not exist', () => {
+    const obj = { a: { c: 2 } };
+    expect(deletePath(['a', 'b'])(obj)).toEqual({ a: { c: 2 } });
+  });
+
+  it('returns the object unchanged when intermediate segment is not an object', () => {
+    const obj = { a: 42 };
+    expect(deletePath(['a', 'b'])(obj)).toEqual({ a: 42 });
+  });
+});
+
+describe('defaults', () => {
+  it('fills in missing keys from default values', () => {
+    expect(defaults({ timeout: 5000, retries: 3 })({ timeout: 1000 })).toEqual({
+      timeout: 1000,
+      retries: 3,
+    });
+  });
+
+  it('preserves all keys when object has everything', () => {
+    expect(defaults({ a: 1, b: 2 })({ a: 10, b: 20 })).toEqual({ a: 10, b: 20 });
+  });
+
+  it('returns all defaults when object is empty', () => {
+    expect(defaults({ x: 1, y: 2 })({})).toEqual({ x: 1, y: 2 });
+  });
+
+  it('does not mutate the default values object', () => {
+    const defs = { a: 1 };
+    defaults(defs)({ b: 2 });
+    expect(defs).toEqual({ a: 1 });
   });
 });
