@@ -255,6 +255,106 @@ combineAll([Ok(1), Err('x'), Ok(3)]); // Err('x')
 
 ---
 
+#### `ap(resultFn)(result)`
+
+Applies a wrapped function `Result<(T) => R, E>` to a `Result<T, E>`. Both must be `Ok` for the application to occur.
+
+**Signature:** `<T, R, E>(resultFn: Result<(value: T) => R, E>) => (result: Result<T, E>) => Result<R, E>`
+
+**Example:**
+```typescript
+const addOne = Ok((x: number) => x + 1);
+ap(addOne)(Ok(5));    // Ok(6)
+ap(addOne)(Err('x')); // Err('x')
+ap(Err('fn'))(Ok(5)); // Err('fn')
+```
+
+---
+
+#### `liftA2`
+
+Alias for `combineTwo`. Lifts a binary function over two Results.
+
+**See also:** `combineTwo`, `liftA3`
+
+---
+
+#### `liftA3(fn)(ra, rb, rc)`
+
+Lifts a ternary function over three Results. Returns the first `Err` if any result fails.
+
+**Signature:** `<A, B, C, R, E>(fn: (a: A, b: B, c: C) => R) => (ra: Result<A, E>, rb: Result<B, E>, rc: Result<C, E>) => Result<R, E>`
+
+**Example:**
+```typescript
+const sum3 = liftA3((a: number, b: number, c: number) => a + b + c);
+sum3(Ok(1), Ok(2), Ok(3));       // Ok(6)
+sum3(Ok(1), Err('x'), Ok(3));    // Err('x')
+```
+
+---
+
+#### `bimap(onOk, onErr)(result)`
+
+Maps both branches of a Result simultaneously.
+
+**Signature:** `<T, E, R, F>(onOk: (value: T) => R, onErr: (error: E) => F) => (result: Result<T, E>) => Result<R, F>`
+
+**Example:**
+```typescript
+bimap(
+  (n: number) => n * 2,
+  (e: string) => e.toUpperCase(),
+)(Ok(5));    // Ok(10)
+
+bimap(
+  (n: number) => n * 2,
+  (e: string) => e.toUpperCase(),
+)(Err('x')); // Err('X')
+```
+
+---
+
+#### `mapLeft(fn)(result)`
+
+Alias for `mapErr`. Applies `fn` to the error if `Err`; passes `Ok` through unchanged.
+
+**Signature:** `<T, E, F>(fn: (error: E) => F) => (result: Result<T, E>) => Result<T, F>`
+
+**See also:** `mapErr`
+
+---
+
+#### `swap(result)`
+
+Flips `Ok(x)` to `Err(x)` and `Err(e)` to `Ok(e)`.
+
+**Signature:** `<T, E>(result: Result<T, E>) => Result<E, T>`
+
+**Example:**
+```typescript
+swap(Ok(42));      // Err(42)
+swap(Err('oops')); // Ok('oops')
+```
+
+---
+
+#### `toOption(result)`
+
+Converts `Ok(x)` to `Some(x)` and `Err` to `None`, discarding the error.
+
+**Signature:** `<T, E>(result: Result<T, E>) => Option<T>`
+
+**Example:**
+```typescript
+toOption(Ok(42));      // Some(42)
+toOption(Err('oops')); // None
+```
+
+**See also:** `resultToOption`, `optionToResult`
+
+---
+
 #### `collectErrors(results)`
 
 Collects all values if all are `Ok`, or all errors if any are `Err`. Unlike `combineAll`, does not short-circuit.
@@ -1233,6 +1333,33 @@ await parallel([
 
 ---
 
+### Result-aware Async
+
+| Function | Description |
+|----------|-------------|
+| `mapConcurrentResult(concurrency, fn)(arr)` | Concurrent map with bounded parallelism; accumulates all errors in a `Result` |
+| `mapAsyncResult(fn)(arr)` | Sequential async map; accumulates all errors in a `Result` |
+| `reduceAsyncResult(fn, initial)(arr)` | Sequential async reduce that short-circuits on first `Err` |
+
+**Example:**
+```typescript
+import { mapConcurrentResult, mapAsyncResult, collectErrors } from 'fp-core';
+
+// mapAsyncResult — sequential, collects all errors
+const results = await mapAsyncResult(
+  async (id: string) => fetchUser(id), // (id) => Promise<Result<User, Error>>
+)(['1', '2', '3']);
+collectErrors(results); // Ok([u1, u2, u3]) or Err([...errors])
+
+// mapConcurrentResult — concurrent with limit
+const results2 = await mapConcurrentResult(
+  5,
+  async (id: string) => processItem(id),
+)(ids);
+```
+
+---
+
 ## Array
 
 `import { ... } from 'fp-core/array'`
@@ -1275,6 +1402,28 @@ All array functions are curried and data-last — designed to compose inside `pi
 | `unzip(arr)` | Splits `[T, U][]` into `[T[], U[]]` |
 | `hasItems(arr)` | `true` if array is non-empty |
 
+### Safe Navigation (Option-returning)
+
+| Function | Description |
+|----------|-------------|
+| `head(arr)` | First element as `Option<T>`; `None` if empty |
+| `tail(arr)` | All-but-first as `Option<T[]>`; `None` if empty |
+| `last(arr)` | Last element as `Option<T>`; `None` if empty |
+| `init(arr)` | All-but-last as `Option<T[]>`; `None` if empty |
+| `nth(n)(arr)` | Element at index n (negative supported); `None` if out of bounds |
+
+**Example:**
+```typescript
+import { head, tail, last, nth } from 'fp-core';
+
+head([1, 2, 3]); // Some(1)
+head([]);        // None
+
+last([1, 2, 3]); // Some(3)
+nth(-1)([1, 2, 3]); // Some(3) — last element via negative index
+nth(10)([1, 2, 3]); // None — out of bounds
+```
+
 **Example:**
 ```typescript
 pipe(
@@ -1304,6 +1453,7 @@ const [evens, odds] = partition(n => n % 2 === 0)([1, 2, 3, 4]);
 | `omit(keys)(obj)` | Returns a new object with the specified keys removed |
 | `merge(base)(override)` | Shallow merge; `override` takes precedence |
 | `deepMerge(base)(override)` | Recursive merge; arrays are replaced, not merged |
+| `defaults(base)(obj)` | Fills missing keys in `obj` from `base`; existing keys are preserved |
 
 **Example:**
 ```typescript
@@ -1344,8 +1494,11 @@ filterValues((v: unknown) => v != null)({ a: 1, b: null }); // { a: 1 }
 | Function | Description |
 |----------|-------------|
 | `getPath(path)(obj)` | Reads a nested value by path; returns `undefined` if any segment is missing |
+| `getPathOr(fallback, path)(obj)` | Like `getPath` but returns `fallback` when the path is absent or the value is undefined |
 | `setPath(path, value)(obj)` | Returns a new object with the nested value replaced; does not mutate |
 | `updatePath(path, fn)(obj)` | Applies `fn` to the nested value and returns a new object |
+| `deletePath(path)(obj)` | Removes the nested key and returns a new object; does not mutate |
+| `hasPath(path)(obj)` | Returns `true` if the nested path exists (even when value is `null`) |
 
 **Example:**
 ```typescript
@@ -1361,8 +1514,10 @@ getPath(['db', 'port'])(config); // 5432
 | Function | Description |
 |----------|-------------|
 | `clone(obj)` | Deep clone of plain objects, arrays, and Dates |
+| `deepClone(value)` | Deep clone with cycle detection (supports Date, RegExp, Map, Set) |
 | `freeze(obj)` | Recursively `Object.freeze`s the object |
 | `equals(obj1)(obj2)` | Deep structural equality comparison |
+| `deepEquals(a)(b)` | Structural equality with cycle detection (supports Date, RegExp, Map, Set) |
 
 ---
 

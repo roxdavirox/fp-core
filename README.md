@@ -301,6 +301,59 @@ template({ name: 'Alice', role: 'admin' })('{{name}} is {{role}}')
 
 ---
 
+## Quick Patterns
+
+### Safe API call — errors as values, no try/catch
+
+```typescript
+import { fromPromise, flatMapAsync, match } from 'fp-core';
+
+const getUser = async (id: string) => {
+  const result = await fromPromise(fetch(`/api/users/${id}`).then(r => r.json()))
+    .then(flatMapAsync(user => fromPromise(enrichUser(user))));
+
+  return match(
+    user  => ({ status: 'ok'    as const, user }),
+    error => ({ status: 'error' as const, message: error.message }),
+  )(result);
+};
+```
+
+### Option null-safe navigation — no optional chaining noise
+
+```typescript
+import { pipe, fromNullable, flatMapOption, mapOption, unwrapOptionOr } from 'fp-core';
+
+const getEventCoords = (user: User): string =>
+  pipe(
+    fromNullable(user.upcomingEvent),
+    flatMapOption(e => fromNullable(e.location)),
+    flatMapOption(l => fromNullable(l.coordinates)),
+    mapOption(c => `${c.lat}, ${c.lng}`),
+    unwrapOptionOr('Location unavailable'),
+  );
+```
+
+### Form validation — accumulate all errors
+
+```typescript
+import { Ok, Err, collectErrors, match } from 'fp-core';
+
+const validate = (form: SignupForm) =>
+  match(
+    ()       => ({ ok: true  as const, form }),
+    (errors) => ({ ok: false as const, errors }),
+  )(collectErrors([
+    form.email.includes('@') ? Ok(form) : Err('Email is invalid'),
+    form.password.length >= 8 ? Ok(form) : Err('Password too short'),
+    form.age >= 18 ? Ok(form) : Err('Must be 18 or older'),
+  ]));
+```
+
+→ [See all 10 recipes in docs/RECIPES.md](./docs/RECIPES.md)
+
+---
+
 ## Design Principles
 
 1. **Value-first, not point-free.** `pipe(value, fn1, fn2)` instead of `pipe(fn1, fn2)(value)`. TypeScript loves this.
