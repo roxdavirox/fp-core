@@ -19,16 +19,20 @@ describe('case transformations', () => {
     expect(capitalize('hELLO wORLD')).toBe('Hello world');
   });
 
-  it('camelCase from space-separated', () => {
-    expect(camelCase('hello world')).toBe('helloWorld');
+  describe('camelCase', () => {
+    it('from space-separated', () => expect(camelCase('hello world')).toBe('helloWorld'));
+    it('from underscore-separated', () => expect(camelCase('hello_world')).toBe('helloWorld'));
+    it('from kebab-case', () => expect(camelCase('hello-world')).toBe('helloWorld'));
+    it('from PascalCase', () => expect(camelCase('HelloWorld')).toBe('helloWorld'));
+    it('from uppercase acronym', () => expect(camelCase('XMLParser')).toBe('xmlParser'));
+    it('from mixed uppercase sequence', () => expect(camelCase('getHTTPSUrl')).toBe('getHttpsUrl'));
+    it('already camelCase is idempotent', () => expect(camelCase('helloWorld')).toBe('helloWorld'));
   });
 
-  it('camelCase from underscore-separated', () => {
-    expect(camelCase('hello_world')).toBe('helloWorld');
-  });
-
-  it('pascalCase', () => {
-    expect(pascalCase('hello world')).toBe('HelloWorld');
+  describe('pascalCase', () => {
+    it('from space-separated', () => expect(pascalCase('hello world')).toBe('HelloWorld'));
+    it('from uppercase acronym', () => expect(pascalCase('XMLParser')).toBe('XmlParser'));
+    it('from camelCase', () => expect(pascalCase('helloWorld')).toBe('HelloWorld'));
   });
 
   describe('snakeCase', () => {
