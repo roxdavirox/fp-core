@@ -136,6 +136,23 @@ describe('memoizeAsync', () => {
     const r = await fn('bad json');
     expect(isErr(r)).toBe(true);
   });
+
+  it('evicts oldest entry when maxSize is exceeded', async () => {
+    let calls = 0;
+    const fn = memoizeAsync(async (n: number) => { calls++; return n * 2; }, undefined, 2);
+
+    await fn(1); // cache: {1}
+    await fn(2); // cache: {1, 2}
+    await fn(3); // evict 1, cache: {2, 3}
+    expect(calls).toBe(3);
+
+    await fn(2); // hit
+    await fn(3); // hit
+    expect(calls).toBe(3);
+
+    await fn(1); // miss — re-computed
+    expect(calls).toBe(4);
+  });
 });
 
 describe('sequence', () => {

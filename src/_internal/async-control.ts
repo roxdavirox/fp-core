@@ -150,15 +150,26 @@ export const throttleAsync =
  * Memoizes an async function. Returns `Result<T, Error>` — never rethrows.
  * Cached results are returned on subsequent calls with the same arguments.
  *
+ * @param fn - The async function to memoize.
+ * @param keyFn - Produces the cache key from the arguments (default: `JSON.stringify(args)`).
+ *   The default key function only works correctly for JSON-serialisable arguments.
+ * @param maxSize - Maximum number of entries to keep. When exceeded the oldest entry is evicted
+ *   (insertion-order FIFO). Defaults to unbounded.
+ * @returns An async wrapper returning `Ok(value)` on hit/success or `Err(error)` on failure.
+ *
  * @example
  * const fetchUser = memoizeAsync(async (id: string) => api.getUser(id));
  *
  * const r1 = await fetchUser('123'); // network call -> Ok(user)
  * const r2 = await fetchUser('123'); // cached       -> Ok(user)
+ *
+ * // With a size cap:
+ * const bounded = memoizeAsync(fetchUser, undefined, 500);
  */
 export const memoizeAsync = <T extends unknown[], R>(
   fn: (...args: T) => Promise<R>,
-  keyFn: (...args: T) => string = (...args) => JSON.stringify(args)
+  keyFn: (...args: T) => string = (...args) => JSON.stringify(args),
+  maxSize?: number
 ) => {
   const cache = new Map<string, R>();
 
@@ -171,6 +182,9 @@ export const memoizeAsync = <T extends unknown[], R>(
 
     try {
       const result = await fn(...args);
+      if (maxSize !== undefined && cache.size >= maxSize) {
+        cache.delete(cache.keys().next().value as string);
+      }
       cache.set(key, result);
       return Ok(result);
     } catch (err) {

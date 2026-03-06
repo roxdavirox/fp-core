@@ -112,6 +112,10 @@ export const tap =
  * @param fn - The function whose results should be cached. Should be pure (same args → same result).
  * @param keyFn - Produces the cache key from the arguments (default: `JSON.stringify(args)`).
  *   Use a custom `keyFn` when args contain non-serialisable values (e.g. objects by reference).
+ *   The default key function only works correctly for JSON-serialisable arguments; it will throw
+ *   on circular references and silently produce wrong keys for `undefined`, functions, `Map`, `Set`.
+ * @param maxSize - Maximum number of entries to keep. When exceeded the oldest entry is evicted
+ *   (insertion-order FIFO). Defaults to unbounded.
  * @returns A memoized wrapper that returns cached results on repeated calls with equal keys.
  *
  * @example
@@ -119,10 +123,14 @@ export const tap =
  * const fastFn = memoize(slowFn);
  * fastFn(5); // computed
  * fastFn(5); // cached
+ *
+ * // With a size cap:
+ * const bounded = memoize(slowFn, undefined, 100);
  */
 export const memoize = <T extends unknown[], R>(
   fn: (...args: T) => R,
-  keyFn: (...args: T) => string = (...args) => JSON.stringify(args)
+  keyFn: (...args: T) => string = (...args) => JSON.stringify(args),
+  maxSize?: number
 ): ((...args: T) => R) => {
   const cache = new Map<string, R>();
 
@@ -134,6 +142,9 @@ export const memoize = <T extends unknown[], R>(
     }
 
     const result = fn(...args);
+    if (maxSize !== undefined && cache.size >= maxSize) {
+      cache.delete(cache.keys().next().value as string);
+    }
     cache.set(key, result);
     return result;
   };
