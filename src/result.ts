@@ -91,7 +91,7 @@ export const mapErr =
     isErr(result) ? Err(fn(result.error)) : result;
 
 /**
- * FlatMap (bind/chain) - permite encadear operações que retornam Result
+ * FlatMap (bind/chain) — chains operations that return Result
  *
  * @example
  * const divide = (x: number, y: number): Result<number, string> =>
@@ -111,7 +111,7 @@ export const flatMap =
 export const andThen = flatMap;
 
 /**
- * Unwrap - extrai valor ou lança erro
+ * Unwrap — extracts the value or throws the error
  *
  * @example
  * unwrap(Ok(42)); // 42
