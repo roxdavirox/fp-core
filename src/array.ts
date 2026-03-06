@@ -224,13 +224,20 @@ export const partition =
  */
 export const flatten = <T>(arr: T[][]): T[] => arr.flat();
 
+/** Recursive type that describes a nested array whose leaves are all of type `T`. */
+type NestedArray<T> = Array<T | NestedArray<T>>;
+
 /**
  * Recursively flattens a deeply nested array.
  *
  * @example
  * flattenDeep([1, [2, [3, [4, [5]]]]]); // [1, 2, 3, 4, 5]
  */
-export const flattenDeep = <T>(arr: unknown[]): T[] => arr.flat(Infinity) as T[];
+export const flattenDeep = <T>(arr: NestedArray<T>): T[] =>
+  // TypeScript cannot evaluate flat(Infinity) on a self-referential type; the any[]
+  // cast is the minimal escape hatch — the output guarantee is preserved by NestedArray<T>.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (arr as any[]).flat(Infinity) as T[];
 
 /**
  * Combines two arrays into an array of tuples, truncated to the shorter length.
