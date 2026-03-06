@@ -215,6 +215,21 @@ describe('equals', () => {
   it('returns false for arrays of different length', () => {
     expect(equals({ list: [1, 2, 3] })({ list: [1, 2] })).toBe(false);
   });
+
+  it('handles nested arrays-of-arrays', () => {
+    expect(equals({ a: [[1, 2], [3, 4]] })({ a: [[1, 2], [3, 4]] })).toBe(true);
+    expect(equals({ a: [[1, 2]] })({ a: [[1, 9]] })).toBe(false);
+  });
+
+  it('handles deeply nested arrays', () => {
+    expect(equals({ a: [[[1]]] })({ a: [[[1]]] })).toBe(true);
+    expect(equals({ a: [[[1]]] })({ a: [[[2]]] })).toBe(false);
+  });
+
+  it('returns true for same reference', () => {
+    const obj = { a: 1 };
+    expect(equals(obj)(obj)).toBe(true);
+  });
 });
 
 describe('clone', () => {

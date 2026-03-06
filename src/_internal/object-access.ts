@@ -214,6 +214,20 @@ export const deletePath =
  */
 export const isEmpty = <T extends object>(obj: T): boolean => Object.keys(obj).length === 0;
 
+/** Recursive value equality used internally by equals. */
+const equalsValue = (a: unknown, b: unknown): boolean => {
+  if (a === b) return true;
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!equalsValue(a[i], b[i])) return false;
+    }
+    return true;
+  }
+  if (isObject(a) && isObject(b)) return equals(a)(b);
+  return false;
+};
+
 /**
  * Structural equality comparison for two plain objects (curried, data-last).
  *
@@ -239,18 +253,7 @@ export const equals =
       const val1 = (obj1 as Record<string, unknown>)[key];
       const val2 = (obj2 as Record<string, unknown>)[key];
 
-      if (isObject(val1) && isObject(val2)) {
-        if (!equals(val1)(val2)) return false;
-      } else if (Array.isArray(val1) && Array.isArray(val2)) {
-        if (val1.length !== val2.length) return false;
-        for (let i = 0; i < val1.length; i++) {
-          if (isObject(val1[i]) && isObject(val2[i])) {
-            if (!equals(val1[i])(val2[i])) return false;
-          } else if (val1[i] !== val2[i]) {
-            return false;
-          }
-        }
-      } else if (val1 !== val2) {
+      if (!equalsValue(val1, val2)) {
         return false;
       }
     }
