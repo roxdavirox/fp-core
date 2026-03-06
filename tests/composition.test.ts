@@ -140,6 +140,23 @@ describe('memoize', () => {
     expensive(10);
     expect(calls).toBe(2);
   });
+
+  it('evicts oldest entry when maxSize is exceeded', () => {
+    let calls = 0;
+    const fn = memoize((n: number) => { calls++; return n * 2; }, undefined, 2);
+
+    fn(1); // cache: {1}
+    fn(2); // cache: {1, 2}
+    fn(3); // cache full → evict 1, cache: {2, 3}
+    expect(calls).toBe(3);
+
+    fn(2); // hit
+    fn(3); // hit
+    expect(calls).toBe(3);
+
+    fn(1); // miss (was evicted) → re-computed
+    expect(calls).toBe(4);
+  });
 });
 
 describe('flip', () => {
