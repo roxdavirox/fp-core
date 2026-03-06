@@ -101,27 +101,6 @@ export const capitalize = (str: string): string =>
   str.length === 0 ? str : str[0]!.toUpperCase() + str.slice(1).toLowerCase();
 
 /**
- * Converts a string to camelCase.
- *
- * @example
- * camelCase('hello world'); // 'helloWorld'
- * camelCase('hello_world'); // 'helloWorld'
- */
-export const camelCase = (str: string): string =>
-  str.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (_, chr) => chr.toUpperCase());
-
-/**
- * Converts a string to PascalCase.
- *
- * @example
- * pascalCase('hello world'); // 'HelloWorld'
- */
-export const pascalCase = (str: string): string => {
-  const camel = camelCase(str);
-  return camel.length === 0 ? camel : camel[0]!.toUpperCase() + camel.slice(1);
-};
-
-/**
  * Splits a string into lowercase words.
  * Handles camelCase, PascalCase, kebab-case, snake_case, Title Case,
  * and any combination of these formats.
@@ -133,6 +112,35 @@ const splitWords = (str: string): string[] =>
     .split(/[\s_-]+/)
     .map(w => w.toLowerCase())
     .filter(Boolean);
+
+/**
+ * Converts a string to camelCase.
+ * Accepts any common format: PascalCase, snake_case, kebab-case, space-separated.
+ *
+ * @example
+ * camelCase('hello world'); // 'helloWorld'
+ * camelCase('hello_world'); // 'helloWorld'
+ * camelCase('XMLParser');   // 'xmlParser'
+ * camelCase('getHTTPSUrl'); // 'getHttpsUrl'
+ */
+export const camelCase = (str: string): string => {
+  const ws = splitWords(str);
+  if (ws.length === 0) return '';
+  return ws[0]! + ws.slice(1).map(w => w[0]!.toUpperCase() + w.slice(1)).join('');
+};
+
+/**
+ * Converts a string to PascalCase.
+ * Accepts any common format: camelCase, snake_case, kebab-case, space-separated.
+ *
+ * @example
+ * pascalCase('hello world'); // 'HelloWorld'
+ * pascalCase('XMLParser');   // 'XmlParser'
+ */
+export const pascalCase = (str: string): string => {
+  const camel = camelCase(str);
+  return camel.length === 0 ? camel : camel[0]!.toUpperCase() + camel.slice(1);
+};
 
 /**
  * Converts a string to snake_case.
