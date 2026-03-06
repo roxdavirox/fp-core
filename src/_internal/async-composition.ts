@@ -8,14 +8,24 @@
 // ============================================================================
 
 /**
- * Async version of `pipe` — composes async functions left to right.
+ * Composes async functions left-to-right, returning a **new function** (point-free).
+ * This is the async equivalent of `flow`, not `pipe` — it does not accept a value
+ * directly; instead it returns a function that you call with the initial value.
+ *
+ * Use `flowAsync` as a self-documenting alias if you prefer the `flow` naming:
  *
  * @example
  * const fetchUser = async (id: string) => ({ id, name: 'Alice' });
  * const getEmail = async (user: { email: string }) => user.email;
  * const sendEmail = async (email: string) => console.log(`Sent to ${email}`);
  *
- * await pipeAsync(fetchUser, getEmail, sendEmail)('user-123');
+ * // pipeAsync — point-free (returns a function)
+ * const process = pipeAsync(fetchUser, getEmail, sendEmail);
+ * await process('user-123');
+ *
+ * // flowAsync — identical behaviour, explicit name
+ * const process2 = flowAsync(fetchUser, getEmail, sendEmail);
+ * await process2('user-123');
  */
 export function pipeAsync<A, B>(fn1: (a: A) => Promise<B>): (a: A) => Promise<B>;
 export function pipeAsync<A, B, C>(
@@ -101,6 +111,17 @@ export function pipeAsync(
     return result;
   };
 }
+
+/**
+ * Self-documenting alias for {@link pipeAsync}.
+ * Use when you want to make it clear you are building a point-free async pipeline,
+ * mirroring the sync `flow` / `pipe` naming convention.
+ *
+ * @example
+ * const process = flowAsync(fetchUser, enrichUser, formatUser);
+ * await process('user-123');
+ */
+export const flowAsync = pipeAsync;
 
 /**
  * Async version of `compose` — composes async functions right to left.
