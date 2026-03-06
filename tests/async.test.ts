@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   pipeAsync,
+  flowAsync,
   composeAsync,
   mapAsync, mapParallel, mapConcurrent,
   filterAsync, reduceAsync,
@@ -272,6 +273,15 @@ describe('throttleAsync', () => {
     expect(r1).toBe(6);
     expect(r2).toBe(10);
     expect(inner).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('flowAsync', () => {
+  it('is an alias for pipeAsync — composes left to right', async () => {
+    const add1 = async (n: number) => n + 1;
+    const double = async (n: number) => n * 2;
+    const process = flowAsync(add1 as (n: unknown) => Promise<unknown>, double as (n: unknown) => Promise<unknown>);
+    expect(await process(5)).toBe(12); // double(add1(5)) = double(6) = 12
   });
 });
 

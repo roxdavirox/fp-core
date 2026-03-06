@@ -5,6 +5,7 @@
 
 export {
   pipeAsync,
+  flowAsync,
   composeAsync,
 } from './_internal/async-composition.js';
 
