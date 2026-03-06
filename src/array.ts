@@ -108,16 +108,20 @@ export const skip =
     arr.slice(n);
 
 /**
- * Returns the first element that satisfies a predicate (curried, data-last).
+ * Returns the first element that satisfies a predicate wrapped in `Some`,
+ * or `None` if no element matches (curried, data-last).
  *
  * @example
  * const isEven = (x: number) => x % 2 === 0;
- * find(isEven)([1, 3, 4, 5]); // 4
+ * find(isEven)([1, 3, 4, 5]); // Some(4)
+ * find(isEven)([1, 3, 5]);     // None
  */
 export const find =
   <T>(predicate: (item: T) => boolean) =>
-  (arr: T[]): T | undefined =>
-    arr.find(predicate);
+  (arr: T[]): Option<T> => {
+    const result = arr.find(predicate);
+    return result !== undefined ? Some(result) : None;
+  };
 
 /**
  * Returns true if at least one element satisfies the predicate (curried, data-last).

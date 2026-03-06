@@ -8,7 +8,7 @@ import {
   compact, hasItems,
   head, tail, last, init, nth,
 } from '../src/array.js';
-import { Some, None } from '../src/option.js';
+import { Some, None, isSome, isNone } from '../src/option.js';
 
 describe('map', () => {
   it('transforms every element', () => {
@@ -102,12 +102,14 @@ describe('skip', () => {
 });
 
 describe('find', () => {
-  it('returns the first matching element', () => {
-    expect(find((x: number) => x % 2 === 0)([1, 3, 4, 6])).toBe(4);
+  it('returns Some with the first matching element', () => {
+    const result = find((x: number) => x % 2 === 0)([1, 3, 4, 6]);
+    expect(isSome(result)).toBe(true);
+    if (isSome(result)) expect(result.value).toBe(4);
   });
 
-  it('returns undefined when nothing matches', () => {
-    expect(find((x: number) => x > 10)([1, 2, 3])).toBeUndefined();
+  it('returns None when nothing matches', () => {
+    expect(isNone(find((x: number) => x > 10)([1, 2, 3]))).toBe(true);
   });
 });
 
