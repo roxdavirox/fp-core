@@ -1,22 +1,22 @@
-# fp-core
+# alchemy
 
 **Functional programming primitives for TypeScript — every type inferred, zero dependencies.**
 
-[![CI](https://github.com/roxdavirox/fp-core/actions/workflows/ci.yml/badge.svg)](https://github.com/roxdavirox/fp-core/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/@roxdavirox/fp-core)](https://www.npmjs.com/package/@roxdavirox/fp-core)
-[![Bundle Size](https://img.shields.io/bundlephobia/minzip/@roxdavirox/fp-core)](https://bundlephobia.com/package/@roxdavirox/fp-core)
+[![CI](https://github.com/tecnomancy/alchemy/actions/workflows/ci.yml/badge.svg)](https://github.com/tecnomancy/alchemy/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@tecnomancy/alchemy)](https://www.npmjs.com/package/@tecnomancy/alchemy)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/@tecnomancy/alchemy)](https://bundlephobia.com/package/@tecnomancy/alchemy)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 ---
 
-fp-core is a TypeScript-native library for writing predictable, composable code.
+alchemy is a TypeScript-native library for writing predictable, composable code.
 It gives you a small set of well-defined primitives — `pipe`, `Result`, `Option`, and a
 full suite of curried array, object, string, and async utilities — all with precise types
 at every step and zero runtime dependencies.
 
 ---
 
-## Why fp-core?
+## Why alchemy?
 
 - **vs fp-ts** — same `Result`/`Option`/`pipe` primitives without HKT encoding or category-theory prerequisites. No `Functor`, `Monad`, or `Applicative` in your mental model — just named functions that compose.
 - **vs Ramda** — value-first `pipe(value, f, g)` instead of `pipe(f, g)(value)`. TypeScript infers every intermediate type without losing precision across steps.
@@ -28,9 +28,9 @@ at every step and zero runtime dependencies.
 ## Install
 
 ```bash
-npm install @roxdavirox/fp-core
+npm install @tecnomancy/alchemy
 # or
-pnpm add @roxdavirox/fp-core
+pnpm add @tecnomancy/alchemy
 ```
 
 ---
@@ -38,7 +38,7 @@ pnpm add @roxdavirox/fp-core
 ## Quick Start
 
 ```typescript
-import { pipe, Ok, Err, Some, None, mapResult, flatMap, match } from '@roxdavirox/fp-core';
+import { pipe, Ok, Err, Some, None, mapResult, flatMap, match } from '@tecnomancy/alchemy';
 
 // pipe — fully typed at every step
 const result = pipe(
@@ -64,7 +64,7 @@ pipe(
 );
 
 // Option — nullable without null checks
-import { fromNullable, mapOption, unwrapOptionOr } from '@roxdavirox/fp-core';
+import { fromNullable, mapOption, unwrapOptionOr } from '@tecnomancy/alchemy';
 
 const getUser = (id: number) => fromNullable(users.find(u => u.id === id));
 
@@ -95,7 +95,7 @@ pipe(
 ### Safe API call — errors as values, no try/catch
 
 ```typescript
-import { fromPromise, flatMapAsync, match } from '@roxdavirox/fp-core';
+import { fromPromise, flatMapAsync, match } from '@tecnomancy/alchemy';
 
 const getUser = async (id: string) => {
   const result = await fromPromise(fetch(`/api/users/${id}`).then(r => r.json()))
@@ -111,7 +111,7 @@ const getUser = async (id: string) => {
 ### Option null-safe navigation — no optional chaining noise
 
 ```typescript
-import { pipe, fromNullable, flatMapOption, mapOption, unwrapOptionOr } from '@roxdavirox/fp-core';
+import { pipe, fromNullable, flatMapOption, mapOption, unwrapOptionOr } from '@tecnomancy/alchemy';
 
 const getEventCoords = (user: User): string =>
   pipe(
@@ -126,7 +126,7 @@ const getEventCoords = (user: User): string =>
 ### Form validation — accumulate all errors
 
 ```typescript
-import { Ok, Err, collectErrors, match } from '@roxdavirox/fp-core';
+import { Ok, Err, collectErrors, match } from '@tecnomancy/alchemy';
 
 const validate = (form: SignupForm) =>
   match(
@@ -156,17 +156,17 @@ const validate = (form: SignupForm) =>
 
 ## Subpath Imports
 
-fp-core is fully tree-shakeable. Import the root `'@roxdavirox/fp-core'` for most use cases, or use subpath imports for explicit dependency tracking:
+alchemy is fully tree-shakeable. Import the root `'@tecnomancy/alchemy'` for most use cases, or use subpath imports for explicit dependency tracking:
 
 ```typescript
-import { Ok, Err, flatMap, mapResult } from '@roxdavirox/fp-core/result';
-import { Some, None, fromNullable } from '@roxdavirox/fp-core/option';
-import { pipe, compose, curry } from '@roxdavirox/fp-core/composition';
-import { pipeAsync, retry, timeout } from '@roxdavirox/fp-core/async';
-import { map, filter, groupBy } from '@roxdavirox/fp-core/array';
-import { pick, omit, setPath } from '@roxdavirox/fp-core/object';
-import { camelCase, truncate, template } from '@roxdavirox/fp-core/string';
-import { and, or, not, isString } from '@roxdavirox/fp-core/predicates';
+import { Ok, Err, flatMap, mapResult } from '@tecnomancy/alchemy/result';
+import { Some, None, fromNullable } from '@tecnomancy/alchemy/option';
+import { pipe, compose, curry } from '@tecnomancy/alchemy/composition';
+import { pipeAsync, retry, timeout } from '@tecnomancy/alchemy/async';
+import { map, filter, groupBy } from '@tecnomancy/alchemy/array';
+import { pick, omit, setPath } from '@tecnomancy/alchemy/object';
+import { camelCase, truncate, template } from '@tecnomancy/alchemy/string';
+import { and, or, not, isString } from '@tecnomancy/alchemy/predicates';
 ```
 
 ---
