@@ -1,5 +1,5 @@
 {
-  "name": "@roxdavirox/fp-core",
+  "name": "@tecnomancy/alchemy",
   "version": "0.1.0",
   "description": "Functional programming primitives for TypeScript — every type inferred, zero dependencies.",
   "type": "module",
@@ -90,12 +90,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/roxdavirox/fp-core.git"
+    "url": "https://github.com/tecnomancy/alchemy.git"
   },
   "bugs": {
-    "url": "https://github.com/roxdavirox/fp-core/issues"
+    "url": "https://github.com/tecnomancy/alchemy/issues"
   },
-  "homepage": "https://github.com/roxdavirox/fp-core#readme",
+  "homepage": "https://github.com/tecnomancy/alchemy#readme",
   "publishConfig": {
     "access": "public"
   },

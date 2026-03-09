@@ -4,8 +4,8 @@ Functional programming primitives for TypeScript. Zero dependencies. Every type 
 
 ## Repository
 
-- **npm:** https://www.npmjs.com/package/fp-core
-- **GitHub:** https://github.com/roxdavirox/fp-core
+- **npm:** https://www.npmjs.com/package/@tecnomancy/alchemy
+- **GitHub:** https://github.com/tecnomancy/alchemy
 
 ## Structure
 
