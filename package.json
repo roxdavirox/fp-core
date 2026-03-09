@@ -86,7 +86,7 @@
     "immutable",
     "tree-shakeable"
   ],
-  "author": "roxdavirox",
+  "author": "tecnomancy",
   "license": "MIT",
   "repository": {
     "type": "git",
